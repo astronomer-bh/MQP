@@ -32,7 +32,6 @@ void Pose::print(){
 
 // change pose information, basically jsut an update of pose
 void Pose::setPose(double x, double y, double z, double yaw, double ptc, double rol){
-  std::cout << x << std::endl;
   this->m_x = x;
   this->m_y = y;
   this->m_z = z;

@@ -24,17 +24,16 @@ void Field::updateRobots(){
     Eigen::Vector3d translation;
     Eigen::Matrix3d rotation;
 
+    // Works off of Relative Camera Coordinates
     curTag.getRelativeTranslationRotation(m_cam.tagSize(),
     m_cam.fx(), m_cam.fy(), m_cam.px(), m_cam.py(),
     translation, rotation);
 
-    cout << translation(0) << std::endl;
-
     try{
-      m_robots.at(tagID).setPose(translation(0), translation(1), translation(2),
+      m_robots.at(tagID).setPose(translation(2), -translation(1), translation(0),
                                 rotation(0), rotation(1), rotation(2));
     } catch (std::out_of_range&) {
-      Robot curRobot(tagID, translation(0), translation(1), translation(2),
+      Robot curRobot(tagID, translation(2), -translation(1), translation(0),
                             rotation(0), rotation(1), rotation(2));
       m_robots.insert(std::pair<int,Robot>(tagID, curRobot));
     }
