@@ -4,6 +4,9 @@
 #include "Robot.hpp"
 
 #include <algorithm>
+#include <thread>
+
+#define NUM_THREADS 3
 
 class Field{
 private:
@@ -12,8 +15,11 @@ private:
 
   void parseOptions(int argc, char* argv[]);
   void updateRobots();
+
+  std::thread threads[NUM_THREADS];
 public:
   Field(int argc, char* argv[]);
+  void init();
   void loop();
 };
 
