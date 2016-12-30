@@ -5,14 +5,6 @@ Field::Field(int argc, char* argv[])
 : m_cam(argc, argv)
 {
   parseOptions(argc, argv);
-
-  for (int i = 0; i < NUM_THREADS; i++){
-    threads[i] = std::thread(&Field::loop, this);
-  }
-
-  for (int i = 0; i < NUM_THREADS; i++){
-    threads[i].join();
-  }
 }
 
 // parse command line options to change default behavior
