@@ -1,18 +1,18 @@
-#______ _                       ___  ______________ 
+#______ _                       ___  ______________
 #| ___ \ |                      |  \/  |  _  | ___ \
 #| |_/ / |_   _ _ __ ___   ___  | .  . | | | | |_/ /
-#|  __/| | | | | '_ ` _ \ / _ \ | |\/| | | | |  __/ 
-#| |   | | |_| | | | | | |  __/ | |  | \ \/' / |    
-#\_|   |_|\__,_|_| |_| |_|\___| \_|  |_/\_/\_\_|    
+#|  __/| | | | | '_ ` _ \ / _ \ | |\/| | | | |  __/
+#| |   | | |_| | | | | | |  __/ | |  | \ \/' / |
+#\_|   |_|\__,_|_| |_| |_|\___| \_|  |_/\_/\_\_|
 #
 #
 #robot.py
 #
 #Python interface for Plume MQP robot
 #
-#Ryan Wiesenberg 	
-#Eric Fast			 
-#Stepthen Harnais	
+#Ryan Wiesenberg
+#Eric Fast
+#Stepthen Harnais
 
 from pycreate import create
 import time
@@ -36,11 +36,11 @@ curpos = [0, 0, 0]	#x,y,theta (cm,cm,rad)
 desired = [0, 0]	#x_dot, y_dot
 
 veld  = 0 					#desired velocity and theta
-thetad = 0			
-vel = 0 					#actual velocity		
+thetad = 0
+vel = 0 					#actual velocity
 
 startt = 0					#time variables
-endt = 0				
+endt = 0
 out = False					#leave while loop
 
 #SENSING A TREND HERE
@@ -62,8 +62,8 @@ COMMS_DELAY = 1
 #update sensors
 # TODO: things besides encoders maybe?
 def update():
-	#misleading name b/c its distance and angle but words escape me 
-	global startt, endt, cutpos, vel, dist, ang
+	#misleading name b/c its distance and angle but words escape me
+	global startt, endt, curpos, vel, dist, ang
 
 	deltadist = 0
 	deltaang = 0
@@ -73,7 +73,7 @@ def update():
 
 	deltat = endt - startt
 	startt = time.time()
-	
+
 	#calculate encoder bits
 	deltadist = robot.getSensor("DISTANCE")
 	deltaang = robot.getSensor("ANGLE")*math.pi/180
@@ -182,7 +182,7 @@ def update_robot():
 	global out
 	while out == False:
 		update()
-		
+
 		time.sleep(SENS_DELAY)
 
 #comms function for comms thread
