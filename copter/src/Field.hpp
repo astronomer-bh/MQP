@@ -4,10 +4,6 @@
 #include "Robot.hpp"
 
 #include <algorithm>
-#include <thread>
-#include <signal.h>
-
-#define NUM_THREADS 3
 
 using namespace std;
 
@@ -20,12 +16,9 @@ private:
 
   void parseOptions(int argc, char* argv[]);
   void updateRobots();
-
-  thread threads[NUM_THREADS];
 public:
   Field(int argc, char* argv[], int keepRunning);
-  void loop(int i);
-  void runThreads();
+  void loop();
   void terminate();
 };
 

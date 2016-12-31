@@ -2,14 +2,11 @@
 
 //inialize field
 Field::Field(int argc, char* argv[], int keepRunning)
-: m_cam(argc, argv), keepRunning(keepRunning)
+: m_cam(argc, argv, keepRunning), keepRunning(keepRunning)
 {
   parseOptions(argc, argv);
 
-  for (int i = 0; i < NUM_THREADS; i++){
-    cout << "thread #" << i << " starting" << endl;
-     threads[i] = thread(&Field::loop, this, i);
-  }
+
 }
 
 // parse command line options to change default behavior
@@ -54,42 +51,15 @@ void Field::updateRobots(){
 
 // updates camera and apriltag locations
 // then updates robot positions based on the new info
-void Field::loop(int i){
+void Field::loop(){
   while(keepRunning){
-    cout << "b4loop: " << i << endl;
     m_cam.loop();
-    cout << "b4rubits" << endl;
     updateRobots();
-    cout << "made it" << endl;
-  }
-}
-
-void Field::runThreads(){
-  for (int i = 0; i < NUM_THREADS; i++){
-     threads[i].join();
   }
 }
 
 void Field::terminate(){
 
-}
-
-static volatile int keepRunning = 1;
-
-void intHandler(int dummy) {
-  keepRunning = 0;
-}
-
-// here is were everything begins
-// creates field with optional args
-// loops through field
-int main(int argc, char* argv[]) {
-  signal(SIGINT, intHandler);
-  Field field(argc, argv, keepRunning);
-  field.runThreads();
-  field.terminate();
-
-  return 0;
 }
 
 /**

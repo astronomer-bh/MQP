@@ -1,8 +1,4 @@
-using namespace std;
-
 #include "Cam.hpp"
-
-const char* windowName = "Field";
 
 // utility function to provide current system time (used below in
 // determining frame rate at which images are being processed)
@@ -12,12 +8,13 @@ double tic() {
   return ((double)t.tv_sec + ((double)t.tv_usec)/1000000.);
 }
 
-Cam::Cam(int argc, char* argv[]) :
+Cam::Cam(int argc, char* argv[], int keepRunning) :
 // default settings, most can be modified through command line options (see below)
+keepRunning(keepRunning),
 m_tagDetector(NULL),
 m_tagCodes(AprilTags::tagCodes36h11),
 
-m_draw(false),
+m_draw(true),
 m_timing(false),
 m_width(640),
 m_height(480),
@@ -26,13 +23,11 @@ m_fx(600),
 m_fy(600),
 m_px(m_width/2),
 m_py(m_height/2),
-m_exposure(-1),
-m_gain(-1),
-m_brightness(-1),
-
 hasDetections(false),
 
-m_deviceId(0)
+m_deviceId(0),
+
+m_windowName("Field")
 {
   parseOptions(argc, argv);
   m_tagDetector = new AprilTags::TagDetector(m_tagCodes);
@@ -40,8 +35,14 @@ m_deviceId(0)
 
   // open window for camera drawing (Optional)
   if (m_draw) {
-    cv::namedWindow(windowName, 1);
+    cv::namedWindow(m_windowName, 1);
   }
+
+  for (int i = 0; i < NUM_THREADS; i++){
+    threads[i] = thread(&Cam::processImage, this);
+  }
+
+  startThreads();
 }
 
 // set fancy camera things
@@ -84,47 +85,50 @@ void Cam::setupVideo() {
 
 }
 
+// decolors image and then extracts tags
 void Cam::processImage() {
-  // alternative way is to grab, then retrieve; allows for
-  // multiple grab when processing below frame rate - v4l keeps a
-  // number of frames buffered, which can lead to significant lag
-  //      m_cap.grab();
-  //      m_cap.retrieve(image);
+  while(keepRunning) {
+    if(!m_image.empty()){
+      // detect April tags (requires a gray scale image)
+      cv::cvtColor(m_image, m_image_gray, CV_BGR2GRAY);
 
-  // detect April tags (requires a gray scale image)
-  cv::cvtColor(m_image, m_image_gray, CV_BGR2GRAY);
-
-  double t0;
-  if (m_timing) {
-    t0 = tic();
+      m_detections = m_tagDetector->extractTags(m_image_gray);
+    }
   }
+}
 
-  m_detections = m_tagDetector->extractTags(m_image_gray);
+// pulls images from the camera and puts them into the buffer
+// processing threads take care of actual image processing
+void Cam::pullImage(){
+  // capture frame
+  m_cap >> m_image;
+}
 
-  if (m_timing) {
-    double dt = tic()-t0;
-    cout << "Extracting tags took " << dt << " seconds." << endl;
-  }
-
+// draws detections alongside current image
+void Cam::drawImage(){
   // show the current image including any detections
   if (m_draw) {
     for (unsigned int i=0; i<m_detections.size(); i++) {
       // also highlight in the image
       m_detections[i].draw(m_image);
     }
-    imshow(windowName, m_image); // OpenCV call
+    imshow(m_windowName, m_image); // OpenCV call
     cv::waitKey(1);
+  }
+}
+
+// starts processing threads
+void Cam::startThreads(){
+  for (int i = 0; i < NUM_THREADS; i++){
+    threads[i].join();
   }
 }
 
 // The processing loop where images are retrieved, tags detected,
 // and information about detections generated
 void Cam::loop() {
-  // capture frame
-
-  m_cap >> m_image;
-cout << "process" << endl;
-  processImage();
+  pullImage();
+  drawImage();
 }
 
 //
