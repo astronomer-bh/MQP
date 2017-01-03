@@ -30,7 +30,7 @@ extern int optind;
 extern char *optarg;
 
 
-#define NUM_THREADS 1
+#define NUM_THREADS 3
 using namespace std;
 
 
@@ -40,7 +40,7 @@ const double PI = 3.14159265358979323846;
 const double TWOPI = 2.0*PI;
 #endif
 
-class Cam {
+class Cam{
 private:
   int keepRunning;
   const char* m_windowName;
@@ -74,6 +74,7 @@ private:
 
   void setTagCodes(string S);
   void setupVideo();
+  void createThreads();
   void startThreads();
   void processImage();
   void pullImage();
