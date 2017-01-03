@@ -37,11 +37,9 @@ m_windowName("Field")
   if (m_draw) {
     cv::namedWindow(m_windowName, 1);
   }
+    cout << "Opened Window" << endl;
 
-  for (int i = 0; i < NUM_THREADS; i++){
-    threads[i] = thread(&Cam::processImage, this);
-  }
-
+  createThreads();
   startThreads();
 }
 
@@ -117,11 +115,19 @@ void Cam::drawImage(){
   }
 }
 
+void Cam::createThreads(){
+  for (int i = 0; i < NUM_THREADS; i++){
+    threads[i] = thread(&Cam::processImage, this);
+    cout << "Created " << NUM_THREADS << " camera processing thread(s)" << endl;
+  }
+}
+
 // starts processing threads
 void Cam::startThreads(){
   for (int i = 0; i < NUM_THREADS; i++){
-    threads[i].join();
+    threads[i].detach();
   }
+  cout << "Started " << NUM_THREADS << " camera processing thread(s)" << endl;
 }
 
 // The processing loop where images are retrieved, tags detected,
