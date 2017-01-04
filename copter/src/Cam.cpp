@@ -8,9 +8,9 @@ double tic() {
   return ((double)t.tv_sec + ((double)t.tv_usec)/1000000.);
 }
 
-Cam::Cam(int argc, char* argv[], int keepRunning) :
+Cam::Cam(int argc, char* argv[]) :
 // default settings, most can be modified through command line options (see below)
-keepRunning(keepRunning),
+keepRunning(true),
 m_tagDetector(NULL),
 m_tagCodes(AprilTags::tagCodes36h11),
 
@@ -135,6 +135,11 @@ void Cam::startThreads(){
 void Cam::loop() {
   pullImage();
   drawImage();
+}
+
+// Ends and cleans up processes still running
+void Cam::terminate() {
+  keepRunning = false;
 }
 
 //
