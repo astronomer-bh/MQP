@@ -17,9 +17,11 @@ private:
   void parseOptions(int argc, char* argv[]);
   void updateRobots();
 public:
-  Field(int argc, char* argv[], int keepRunning);
+  Field(int argc, char* argv[]);
   void loop();
   void terminate();
+
+  Pose getRobotCurPose(int id);
 };
 
 #endif

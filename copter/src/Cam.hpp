@@ -30,7 +30,7 @@ extern int optind;
 extern char *optarg;
 
 
-#define NUM_THREADS 3
+#define NUM_THREADS 2
 using namespace std;
 
 
@@ -42,9 +42,7 @@ const double TWOPI = 2.0*PI;
 
 class Cam{
 private:
-  int keepRunning;
-  const char* m_windowName;
-  int m_deviceId; // camera id (in case of multiple cameras)
+  bool keepRunning;
 
   AprilTags::TagDetector* m_tagDetector;
   AprilTags::TagCodes m_tagCodes;
@@ -72,6 +70,9 @@ private:
 
   bool hasDetections;
 
+  int m_deviceId; // camera id (in case of multiple cameras)
+  const char* m_windowName;
+
   void setTagCodes(string S);
   void setupVideo();
   void createThreads();
@@ -81,8 +82,9 @@ private:
   void drawImage();
   void parseOptions(int argc, char* argv[]);
 public:
-  Cam(int argc, char* argv[], int keepRunning);
+  Cam(int argc, char* argv[]);
   void loop();
+  void terminate();
 
   vector<AprilTags::TagDetection> getTags();
   double tagSize();
