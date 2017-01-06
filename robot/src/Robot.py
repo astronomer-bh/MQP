@@ -42,7 +42,14 @@ class Robot:
 	#robot initialization
 	SERIAL_PORT = "/dev/ttyUSB0"
 
-	def __init__(self, id)
+	#TCP/IP socket
+	#Create a TCP/IP socket
+	PORT = 5732
+	SERVER_IP = "192.168.0.102"
+	server_address = (SERVER_IP, PORT)
+
+
+	def __init__(self, id):
 		self.id = id
 
 		#position initalization
@@ -75,7 +82,7 @@ class Robot:
 	#comms_thread 	~ send/recieve information across TCP/IP
 	#robot_thread	~ driving and turning
 	#update_sens	~ sensor updates
-	def run(self):
+	def main(self):
 		#essentially initializes the threads
 		self.robot_thread.start()
 		self.update_sens.start()
@@ -203,15 +210,8 @@ class Robot:
 
 	#comms function for comms thread
 	def comms(self):
-		global  desired, curpos
-
-		#TCP/IP socket
-		#Create a TCP/IP socket
-		PORT = 5732
-		SERVER_IP = "192.168.0.102"
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		# Connect the socket to the port where the server is listening
-		server_address = (SERVER_IP, PORT)
+		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		print("connecting to %s port %s" %server_address)
 		sock.connect(server_address)
 
