@@ -12,9 +12,14 @@
 #define EXPOSURE_CONTROL // only works in Linux
 #endif
 
+#ifdef __arm__
+#include "raspicam"
+#endif
+
 // OpenCV library for easy access to USB camera and drawing of images
 // on screen
 #include "opencv2/opencv.hpp"
+
 
 // April tags detector and various families that can be selected by command line option
 // located in /usr/include
@@ -58,6 +63,7 @@ private:
 
   bool m_draw; // draw image and April tag detections?
   bool m_timing; // print timing information for each tag extraction call
+  bool m_picam; //picamera is being used;
 
   int m_width; // image size in pixels
   int m_height;

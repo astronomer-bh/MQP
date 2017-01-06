@@ -16,6 +16,8 @@ m_tagCodes(AprilTags::tagCodes36h11),
 
 m_draw(true),
 m_timing(false),
+m_picam(false),
+
 m_width(640),
 m_height(480),
 m_tagSize(0.166),
@@ -46,7 +48,28 @@ m_image_proc(true)
 
 // set fancy camera things
 void Cam::parseOptions(int argc, char* argv[]){
+  int c;
+  while ((c = getopt(argc, argv, ":h?pC:"))){
+    // Each option character has to be in the string in getopt();
+    // the first colon changes the error character from '?' to ':';
+    // a colon after an option means that there is an extra
+    // parameter to this option; 'W' is a reserved character
+    switch (c) {
+      case 'h':
+      case '?':
+      break;
 
+      case 'p':
+      #ifdef __arm__
+      m_picam = true;
+      #endif
+      break;
+
+      case 'C':
+      setTagCodes(optarg);
+      break;
+    }
+  }
 }
 
 // changing the tag family
@@ -70,11 +93,21 @@ void Cam::setTagCodes(string s) {
 // Finds open video device and then starts capture
 // Throws an error if it cannot open
 void Cam::setupVideo() {
-  m_cap = cv::VideoCapture(m_deviceId);
-  if(!m_cap.isOpened()) {
-    cerr << "ERROR: Can't find video device " << m_deviceId << "\n";
-    exit(1);
-  }
+  #ifdef __arm__
+    m_cap = raspicam::RaspiCam_Cv;
+    if(!m_cap.open()) {
+      cerr << "ERROR: Can't find video device " << m_deviceId << "\n";
+      exit(1);
+    }
+  #else
+    m_cap = cv::VideoCapture(m_deviceId);
+    if(!m_cap.isOpened()) {
+      cerr << "ERROR: Can't find video device " << m_deviceId << "\n";
+      exit(1);
+    }
+  #endif
+
+
   m_cap.set(CV_CAP_PROP_FRAME_WIDTH, m_width);
   m_cap.set(CV_CAP_PROP_FRAME_HEIGHT, m_height);
   cout << "Camera successfully opened (ignore error messages above...)" << endl;
