@@ -8,6 +8,7 @@ private:
   Pose m_curPose;
   Pose m_initPose;
 public:
+  Robot(int id);
   Robot(int id, Pose pose);
   Robot(int id, double x, double y, double z, double yaw, double ptc, double rol);
   int dist();

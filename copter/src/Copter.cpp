@@ -1,7 +1,7 @@
 #include "Copter.hpp"
 
   Copter::Copter(int argc, char* argv[])
-  : m_field(argc, argv), m_homeID(0), m_pose()
+  : Robot(0), m_field(argc, argv)
   {
 
   }

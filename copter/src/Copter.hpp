@@ -3,11 +3,9 @@
 #include <signal.h>
 #include "Field.hpp"
 
-class Copter {
+class Copter : private Robot{
 private:
   Field m_field;
-  int m_homeID;
-  Pose m_pose;
 
   Pose posHome();
   void goHome();
