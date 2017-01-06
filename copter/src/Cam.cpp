@@ -27,7 +27,8 @@ hasDetections(false),
 
 m_deviceId(0),
 
-m_windowName("Field")
+m_windowName("Field"),
+m_image_proc(true)
 {
   parseOptions(argc, argv);
   m_tagDetector = new AprilTags::TagDetector(m_tagCodes);
@@ -37,7 +38,7 @@ m_windowName("Field")
   if (m_draw) {
     cv::namedWindow(m_windowName, 1);
   }
-    cout << "Opened Window" << endl;
+  cout << "Opened Window" << endl;
 
   createThreads();
   startThreads();
@@ -80,7 +81,26 @@ void Cam::setupVideo() {
   cout << "Actual resolution: "
   << m_cap.get(CV_CAP_PROP_FRAME_WIDTH) << "x"
   << m_cap.get(CV_CAP_PROP_FRAME_HEIGHT) << endl;
+}
 
+
+
+// Threading
+
+// creates processing threads
+void Cam::createThreads(){
+  for (int i = 0; i < NUM_THREADS; i++){
+    threads[i] = thread(&Cam::processImage, this);
+  }
+  cout << "Created " << NUM_THREADS << " camera processing thread(s)" << endl;
+}
+
+// starts processing threads
+void Cam::startThreads(){
+  for (int i = 0; i < NUM_THREADS; i++){
+    threads[i].detach();
+  }
+  cout << "Started " << NUM_THREADS << " camera processing thread(s)" << endl;
 }
 
 // decolors image and then extracts tags
@@ -88,18 +108,38 @@ void Cam::processImage() {
   while(keepRunning) {
     if(!m_image.empty()){
       // detect April tags (requires a gray scale image)
+      m_image_mutex.lock();
+      m_image_gray_mutex.lock();
       cv::cvtColor(m_image, m_image_gray, CV_BGR2GRAY);
-
+      m_image_mutex.unlock();
       m_detections = m_tagDetector->extractTags(m_image_gray);
+      m_image_gray_mutex.unlock();
+      m_image_proc = true;
     }
   }
+}
+
+
+
+// Main Loop
+
+// The processing loop where images are retrieved, tags detected,
+// and information about detections generated
+void Cam::loop() {
+  pullImage();
+  drawImage();
 }
 
 // pulls images from the camera and puts them into the buffer
 // processing threads take care of actual image processing
 void Cam::pullImage(){
   // capture frame
-  m_cap >> m_image;
+  if(m_image_proc){
+    m_image_mutex.lock();
+    m_cap >> m_image;
+    m_image_mutex.unlock();
+    m_image_proc = false;
+  }
 }
 
 // draws detections alongside current image
@@ -113,28 +153,6 @@ void Cam::drawImage(){
     imshow(m_windowName, m_image); // OpenCV call
     cv::waitKey(1);
   }
-}
-
-void Cam::createThreads(){
-  for (int i = 0; i < NUM_THREADS; i++){
-    threads[i] = thread(&Cam::processImage, this);
-    cout << "Created " << NUM_THREADS << " camera processing thread(s)" << endl;
-  }
-}
-
-// starts processing threads
-void Cam::startThreads(){
-  for (int i = 0; i < NUM_THREADS; i++){
-    threads[i].detach();
-  }
-  cout << "Started " << NUM_THREADS << " camera processing thread(s)" << endl;
-}
-
-// The processing loop where images are retrieved, tags detected,
-// and information about detections generated
-void Cam::loop() {
-  pullImage();
-  drawImage();
 }
 
 // Ends and cleans up processes still running
