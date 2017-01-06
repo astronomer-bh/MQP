@@ -7,6 +7,7 @@ class Copter {
 private:
   Field m_field;
   int m_homeID;
+  Pose m_pose;
 
   Pose posHome();
   void goHome();

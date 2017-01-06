@@ -5,6 +5,10 @@ Pose::Pose(double x, double y, double z, double yaw, double ptc, double rol)
   : m_x(x), m_y(y), m_z(z), m_yaw(yaw), m_ptc(ptc), m_rol(rol)
 {}
 
+Pose::Pose()
+  : m_x(0), m_y(0), m_z(0), m_yaw(0), m_ptc(0), m_rol(0)
+{}
+
 // distance between two Poses via coordinates
 double Pose::dist(Pose posn){
   return sqrt(pow((x() - posn.x()), 2) + pow((y() - posn.y()), 2) + pow((z() - posn.z()), 2));
