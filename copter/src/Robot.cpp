@@ -1,5 +1,8 @@
 #include "Robot.hpp"
 
+Robot::Robot(int id)
+  : m_id(id), m_initPose(), m_curPose(){}
+
 // initializes robot if given Pose directly
 Robot::Robot(int id, Pose pose)
   : m_id(id), m_initPose(pose), m_curPose(pose){}

@@ -14,6 +14,7 @@ private:
 
 public:
   Pose(double x, double y, double z, double yaw, double ptc, double rol);
+  Pose();
   double dist(Pose posn);
   Pose diff(Pose posn);
 
