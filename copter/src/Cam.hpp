@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <cmath>
 #include <thread>
+#include <mutex>
 
 #ifndef __APPLE__
 #define EXPOSURE_CONTROL // only works in Linux
@@ -30,7 +31,7 @@ extern int optind;
 extern char *optarg;
 
 
-#define NUM_THREADS 3
+#define NUM_THREADS 1
 using namespace std;
 
 
@@ -42,16 +43,18 @@ const double TWOPI = 2.0*PI;
 
 class Cam{
 private:
-  int keepRunning;
-  const char* m_windowName;
-  int m_deviceId; // camera id (in case of multiple cameras)
+  bool keepRunning;
 
   AprilTags::TagDetector* m_tagDetector;
   AprilTags::TagCodes m_tagCodes;
   vector<AprilTags::TagDetection> m_detections; // AprilTag Detections
 
   cv::Mat m_image;      // cur image
+  mutex m_image_mutex;
+  bool m_image_proc;
+
   cv::Mat m_image_gray; // cur grayscale image
+  mutex m_image_gray_mutex;
 
   bool m_draw; // draw image and April tag detections?
   bool m_timing; // print timing information for each tag extraction call
@@ -72,6 +75,9 @@ private:
 
   bool hasDetections;
 
+  int m_deviceId; // camera id (in case of multiple cameras)
+  const char* m_windowName;
+
   void setTagCodes(string S);
   void setupVideo();
   void createThreads();
@@ -81,8 +87,9 @@ private:
   void drawImage();
   void parseOptions(int argc, char* argv[]);
 public:
-  Cam(int argc, char* argv[], int keepRunning);
+  Cam(int argc, char* argv[]);
   void loop();
+  void terminate();
 
   vector<AprilTags::TagDetection> getTags();
   double tagSize();

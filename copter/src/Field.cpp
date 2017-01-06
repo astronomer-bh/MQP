@@ -1,8 +1,8 @@
 #include "Field.hpp"
 
 //inialize field
-Field::Field(int argc, char* argv[], int keepRunning)
-: m_cam(argc, argv, keepRunning), keepRunning(keepRunning)
+Field::Field(int argc, char* argv[])
+: m_cam(argc, argv), keepRunning(true)
 {
   parseOptions(argc, argv);
 
@@ -52,14 +52,23 @@ void Field::updateRobots(){
 // updates camera and apriltag locations
 // then updates robot positions based on the new info
 void Field::loop(){
-  while(keepRunning){
-    m_cam.loop();
-    updateRobots();
-  }
+  m_cam.loop();
+  updateRobots();
 }
 
+// kills any necessary processes before closing
 void Field::terminate(){
+  keepRunning = false;
+  m_cam.terminate();
+}
 
+// Getters and Setters
+Pose Field::getRobotCurPose(int id){
+  try{
+    return m_robots.at(id).getPose();
+  } catch (std::out_of_range&){
+    return Pose(0, 0, 0, 0, 0, 0);
+  }
 }
 
 /**
