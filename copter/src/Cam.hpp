@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <cmath>
 #include <thread>
+#include <mutex>
 
 #ifndef __APPLE__
 #define EXPOSURE_CONTROL // only works in Linux
@@ -30,7 +31,7 @@ extern int optind;
 extern char *optarg;
 
 
-#define NUM_THREADS 2
+#define NUM_THREADS 1
 using namespace std;
 
 
@@ -49,7 +50,11 @@ private:
   vector<AprilTags::TagDetection> m_detections; // AprilTag Detections
 
   cv::Mat m_image;      // cur image
+  mutex m_image_mutex;
+  bool m_image_proc;
+
   cv::Mat m_image_gray; // cur grayscale image
+  mutex m_image_gray_mutex;
 
   bool m_draw; // draw image and April tag detections?
   bool m_timing; // print timing information for each tag extraction call

@@ -18,7 +18,7 @@
 
   // Flies the Copter
   void Copter::loop(){
-
+    m_field.loop();
   }
 
   // kills any necessary processes before closing
