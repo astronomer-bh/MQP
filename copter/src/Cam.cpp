@@ -93,15 +93,21 @@ void Cam::setTagCodes(string s) {
 // Finds open video device and then starts capture
 // Throws an error if it cannot open
 void Cam::setupVideo() {
-  if(m_picam){
-
-  } else {
+  #ifdef __arm__
+    m_cap = raspicam::RaspiCam_Cv;
+    if(!m_cap.open()) {
+      cerr << "ERROR: Can't find video device " << m_deviceId << "\n";
+      exit(1);
+    }
+  #else
     m_cap = cv::VideoCapture(m_deviceId);
-  }
-  if(!m_cap.isOpened()) {
-    cerr << "ERROR: Can't find video device " << m_deviceId << "\n";
-    exit(1);
-  }
+    if(!m_cap.isOpened()) {
+      cerr << "ERROR: Can't find video device " << m_deviceId << "\n";
+      exit(1);
+    }
+  #endif
+
+
   m_cap.set(CV_CAP_PROP_FRAME_WIDTH, m_width);
   m_cap.set(CV_CAP_PROP_FRAME_HEIGHT, m_height);
   cout << "Camera successfully opened (ignore error messages above...)" << endl;
