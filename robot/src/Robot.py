@@ -24,6 +24,9 @@ import pickle
 from custom_libs import encoding_TCP as encode
 import argparse
 
+import logging
+from Adafruit_BNO055 import BNO055
+
 class Robot:
 	#driving constants
 	#cm/s (probably. taken from create.py)
@@ -40,13 +43,17 @@ class Robot:
 	ANGMARG = .05
 
 	#robot initialization
-	SERIAL_PORT = "/dev/ttyUSB0"
+	ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
 
 	#TCP/IP socket
 	#Create a TCP/IP socket
 	PORT = 5732
 	SERVER_IP = "192.168.0.102"
 	server_address = (SERVER_IP, PORT)
+
+	#imu initialization
+	IMU_SERIAL_PORT = "/dev/ttyAMA0"
+	IMU_GPIO_PIN = 18
 
 
 	def __init__(self, id):
@@ -71,9 +78,25 @@ class Robot:
 		self.ang = curpos[2]
 
 		#start in full mode so it can charge and not be a pain
-		self.robot = create.Create(SERIAL_PORT, startingMode=3)
+		self.robot = create.Create(ROBOT_SERIAL_PORT, startingMode=3)
 
-		#TODO: 	EKF Thread
+		#open connection to imu (BNO055)
+		self.bno = BNO055.BNO055(serial_port=IMU_SERIAL_PORT, rst=IMU_GPIO_PIN)
+
+		# Initialize the BNO055 and stop if something went wrong.
+		if not bno.begin():
+    		raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+
+		# Print BNO055 status and self test result.
+		status, self_test, error = bno.get_system_status()
+		print('System status: {0}'.format(status))
+		print('Self test result (0x0F is normal): 0x{0:02X}'.format(self_test))
+		# Print out an error if imu status is in error mode.
+		if status == 0x01:
+    		print('System error: {0}'.format(error))
+    		print('See datasheet section 4.3.59 for the meaning.')
+
+		#TODO: EKF Thread
 		self.robot_thread = threading.Thread(name="robot_thread", target=self.run_robot)
 		self.update_sens = threading.Thread(name="update_robot", target=self.update_robot)
 		self.comms_thread = threading.Thread(name="comms_thread", target=self.comms)
@@ -109,6 +132,13 @@ class Robot:
 		deltaang = self.robot.getSensor("ANGLE")*math.pi/180
 		self.dist += deltadist
 		self.curpos[2] += deltaang
+
+		#pull imu bits
+		gyro_x, gyro_y, gyro_z = self.bno.read_gyroscope()
+		accl_x, accl_y, accl_z = self.bno.read_accelerometer()
+
+		#send to EKF
+		
 
 		#update position bits
 		self.curpos[2] = math.fmod(self.curpos[2], (2 * math.pi))
