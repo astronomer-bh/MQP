@@ -109,8 +109,12 @@ class Robot:
 		# self.update_sens = threading.Thread(name="update_robot", target=self.update_robot)
 		# self.comms_thread = threading.Thread(name="comms_thread", target=self.comms)
 
+
+	###################
+	#Sensor Functions#
+	###################
+
 	#update sensors
-	# TODO: things besides encoders maybe?
 	def updatePosn(self):
 		deltadist = 0
 		deltaang = 0
@@ -148,7 +152,11 @@ class Robot:
 
 	#update current gas concentration readings
 	def updateGas(self):
+		
 
+	#########################
+	#Communication Functions#
+	#########################
 
 	def initComms(self):
 		# Connect the socket to the port where the server is listening
