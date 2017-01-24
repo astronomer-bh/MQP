@@ -58,19 +58,18 @@ class RobotNavigationEKF:
         Fx = self.stateTransXJacob(delD, delV, delTheta)
         tempP = (Fx.dot(self.P)).dot(Transpose(Fx))
         Q = self.procNoiseCovar(delD, delV, delTheta)
-        P = MatAdd(tempP, Q)
-        return P
+        self.P = MatAdd(tempP, Q)
 
     # update process error of EKF
     def updateProcError(self, stdAD, stdAV, stdAG):
         self.stdAD = stdAD
         self.stdAV = stdAV
         self.stdAG = stdAG
-        self.R = R = Matrix([[stdAD ** 2, 0, 0, 0, 0],
-                            [0, stdAD ** 2, 0, 0, 0],
-                            [0, 0, stdAV ** 2, 0, 0],
-                            [0, 0, 0, stdAV ** 2, 0],
-                            [0, 0, 0, 0, stdAG ** 2]])
+        self.R = Matrix([[stdAD ** 2, 0, 0, 0, 0],
+                        [0, stdAD ** 2, 0, 0, 0],
+                        [0, 0, stdAV ** 2, 0, 0],
+                        [0, 0, 0, stdAV ** 2, 0],
+                        [0, 0, 0, 0, stdAG ** 2]])
 
     # Jacobian of the Expected Measurement Function with respect to X (state)
     def HJacob(self, dt):
@@ -87,13 +86,14 @@ class RobotNavigationEKF:
         return h
 
     # The big shebang
-    def KalmanFilter(self, z, delD, delV, delTheta, dt):
+    def KalmanFilter(self, z, delD, delTheta, dt):
+        delV = delD/dt;
         HJacobian = self.HJacob(dt)
-        self.P = self.procErrorCovar(delD, delV, delTheta)
+        self.procErrorCovar(delD, delV, delTheta)
         S = MatAdd((HJacobian.dot(self.P)).dot(Transpose(HJacobian)), self.R)                                  # Innovation Matrix
         K = (self.P.dot(HJacobian)).dot(Inverse(S))                 # Kalman Gain
         tempP = -((K.dot(S)).(Transpose(K)))                   # Temporary Value for next calculation - Not sure if I can use the negative sign like I did, check that?
         self.oldP = MatAdd(self.P, tempP)
         h = self.h(dt)                    # P_old fot the next pass
         self.estX = self.estX + K.dot(z-h)
-        return P_next, x_hat
+        return estX

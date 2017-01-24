@@ -22,6 +22,7 @@ from threading import Thread, Lock
 import socket
 import pickle
 from custom_libs import encoding_TCP as encode
+from custom_libs import RobotNavigationEKF as EKF
 import argparse
 
 import logging
@@ -96,6 +97,10 @@ class Robot:
     		print('System error: {0}'.format(error))
     		print('See datasheet section 4.3.59 for the meaning.')
 
+		# Create Robot's Kalman filter
+		# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
+		self.filter = EKF.RobotNavigationEKF(0, 0, 0, 0, 0, 0)
+
 		#TODO: EKF Thread
 		self.robot_thread = threading.Thread(name="robot_thread", target=self.run_robot)
 		self.update_sens = threading.Thread(name="update_robot", target=self.update_robot)
@@ -130,21 +135,26 @@ class Robot:
 		#calculate encoder bits
 		deltadist = self.robot.getSensor("DISTANCE")
 		deltaang = self.robot.getSensor("ANGLE")*math.pi/180
-		self.dist += deltadist
-		self.curpos[2] += deltaang
+		# self.dist += deltadist
+		# self.curpos[2] += deltaang
 
 		#pull imu bits
 		gyro_x, gyro_y, gyro_z = self.bno.read_gyroscope()
 		accl_x, accl_y, accl_z = self.bno.read_accelerometer()
 
 		#send to EKF
-		
+		z = Matriz([[accl_x],
+					[accl_y],
+					[accl_x],
+					[accl_y],
+					[gyro_z]])
+		estX = filter.KalmanFilter(z, deltadist, delaang, deltat)
 
 		#update position bits
-		self.curpos[2] = math.fmod(self.curpos[2], (2 * math.pi))
-		self.curpos[0] += deltadist*math.cos(self.curpos[2])
-		self.curpos[1] += deltadist*math.sin(self.curpos[2])
-		self.vel = deltadist/deltat
+		self.curpos[0] = z[0]
+		self.curpos[1] = z[1]
+		self.curpos[2] = math.fmod(z[4], (2 * math.pi))
+		self.vel = math.sqrt(math.pow(z[3], 2) + math.pow(z[4], 2))
 
 		return
 
