@@ -101,29 +101,17 @@ class Robot:
 		# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
 		self.filter = EKF.RobotNavigationEKF(0, 0, 0, 0, 0, 0)
 
-		#TODO: EKF Thread
-		self.robot_thread = threading.Thread(name="robot_thread", target=self.run_robot)
-		self.update_sens = threading.Thread(name="update_robot", target=self.update_robot)
-		self.comms_thread = threading.Thread(name="comms_thread", target=self.comms)
+		# Start TCP Connention
+		self.initComms()
 
-	#where the buisness happens
-	#comms_thread 	~ send/recieve information across TCP/IP
-	#robot_thread	~ driving and turning
-	#update_sens	~ sensor updates
-	def main(self):
-		#essentially initializes the threads
-		self.robot_thread.start()
-		self.update_sens.start()
-		self.comms_thread.start()
-
-		#adds them on to the main thread (this one)
-		self.robot_thread.join()
-		self.update_sens.join()
-		self.comms_thread.join()
+		# # Thread initializations
+		# self.robot_thread = threading.Thread(name="robot_thread", target=self.run_robot)
+		# self.update_sens = threading.Thread(name="update_robot", target=self.update_robot)
+		# self.comms_thread = threading.Thread(name="comms_thread", target=self.comms)
 
 	#update sensors
 	# TODO: things besides encoders maybe?
-	def update(self):
+	def updatePosn(self):
 		deltadist = 0
 		deltaang = 0
 
@@ -158,6 +146,44 @@ class Robot:
 
 		return
 
+	#update current gas concentration readings
+	def updateGas(self):
+
+
+	def initComms(self):
+		# Connect the socket to the port where the server is listening
+		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		print("connecting to %s port %s" %server_address)
+		self.sock.connect(server_address)
+
+		time.sleep(COMMS_DELAY)
+
+	def loopComms(self):
+		try:
+			#send curpos
+			encode.sendPacket(sock=sock, message=curpos)
+
+			#recieve message
+			rcv = encode.recievePacket(sock=sock)
+
+			print(rcv)
+
+			#determine what to do with message
+			if rcv == "out":
+				quit()
+			else:
+				desired[0] = rcv[0]
+				desired[1] = rcv[1]
+
+		except:
+			pass
+
+	def terminateComms(self):
+		#close socket
+		print("Closing Socket")
+		sock.close()
+
+
 	#change input velocities to v and theta
 	def tCoord(self):
 		self.veld = math.sqrt(self.desired[0]**2 + self.desired[1]**2)
@@ -175,6 +201,10 @@ class Robot:
 
 		return
 
+	###################
+	#Driving Functions#
+	###################
+
 	#movement control
 	#decide turn or straight
 	def move(self):
@@ -189,13 +219,6 @@ class Robot:
 		elif(self.curpos[2] > upper):
 			self.turnCW()
 		return False
-
-
-
-
-	###################
-	#Driving Functions#
-	###################
 
 	#drive desired velocity
 	def drive(self):
@@ -223,12 +246,6 @@ class Robot:
 		self.stop()
 	 	self.keepRunning = False
 
-		#ET go the fork home
-		#TODO:	MAKE THE ROBOT NOT JUST PUSH THE DOCK
-		#robot.seekDock()
-		return
-
-
 
 	##################
 	#Thread Functions#
@@ -245,44 +262,43 @@ class Robot:
 	#sensors will love me
 	def update_robot(self):
 		while self.keepRunning:
-			self.update()
-			time.sleep(SENS_DELAY)
+			self.updatePosn()
+			self.updateGas()
+			# time.sleep(SENS_DELAY)
+
 
 	#comms function for comms thread
 	def comms(self):
-		# Connect the socket to the port where the server is listening
-		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		print("connecting to %s port %s" %server_address)
-		sock.connect(server_address)
-
-		time.sleep(COMMS_DELAY)
-
-		encode.sendPacket(sock=sock, message=curpos)
-
+		initComms(self)
 		while keepRunning:
-			try:
-				#recieve message
-				rcv = encode.recievePacket(sock=sock)
-
-				print(rcv)
-
-				#determine what to do with message
-				if rcv == "out":
-					quit()
-				else:
-					desired[0] = rcv[0]
-					desired[1] = rcv[1]
+			loopComms(self)
 
 
-					#send curpos
-					encode.sendPacket(sock=sock, message=curpos)
-			except:
-				pass
+	#where the buisness happens
+	#comms_thread 	~ send/recieve information across TCP/IP
+	#robot_thread	~ driving and turning
+	#update_sens	~ sensor updates
+	def main(self):
+		# #essentially initializes the threads
+		# self.robot_thread.start()
+		# self.update_sens.start()
+		# self.comms_thread.start()
+		#
+		# #adds them on to the main thread (this one)
+		# self.robot_thread.join()
+		# self.update_sens.join()
+		# self.comms_thread.join()
 
-		#close socket
-		print("Closing Socket")
-		sock.close()
+		while self.keepRunning:
+			self.updatePosn()
+			self.updateGas()
+			self.loopComms()
+			self.tCoord()
+			self.move()
+		self.terminate()
 
+	def terminate(self):
+		self.terminateComms()
 
 
 ############################
@@ -292,4 +308,4 @@ parser = argparse.ArgumentParser()
 parser.add_argument("id", type=int, help="assign ID to robot")
 args = parser.parse_args()
 robot(args.id)
-robot.run()
+robot.main()
