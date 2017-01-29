@@ -47,7 +47,7 @@ class RobotNavigationEKF:
         return Fu
 
     # Process Noise Covariance Matrix
-    def procNoiseCovar(self, delD, delV, delTheta)):
+    def procNoiseCovar(self, delD, delV, delTheta):
         theta = self.estX(4)
         Fu = state_trans_ujacobian(delD, delV, delTheta)
         Q = (Fu.dot(M)).dot(Transpose(Fu))  # I'm not sure if I can do this, maybe an error
@@ -90,9 +90,9 @@ class RobotNavigationEKF:
         delV = delD/dt;
         HJacobian = self.HJacob(dt)
         self.procErrorCovar(delD, delV, delTheta)
-        S = MatAdd((HJacobian.dot(self.P)).dot(Transpose(HJacobian)), self.R)                                  # Innovation Matrix
-        K = (self.P.dot(HJacobian)).dot(Inverse(S))                 # Kalman Gain
-        tempP = -((K.dot(S)).(Transpose(K)))                   # Temporary Value for next calculation - Not sure if I can use the negative sign like I did, check that?
+        S = MatAdd((HJacobian.dot(self.P)).dot(Transpose(HJacobian)), self.R)
+        K = (self.P.dot(HJacobian)).dot(Inverse(S))
+        tempP = ((K.dot(S)).Transpose(K)).dot(-1)
         self.oldP = MatAdd(self.P, tempP)
         h = self.h(dt)                    # P_old fot the next pass
         self.estX = self.estX + K.dot(z-h)
