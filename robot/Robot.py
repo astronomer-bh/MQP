@@ -86,7 +86,7 @@ class Robot:
 
 		# Initialize the BNO055 and stop if something went wrong.
 		if not bno.begin():
-    		raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
+			raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
 
 		# Print BNO055 status and self test result.
 		status, self_test, error = bno.get_system_status()
@@ -94,8 +94,8 @@ class Robot:
 		print('Self test result (0x0F is normal): 0x{0:02X}'.format(self_test))
 		# Print out an error if imu status is in error mode.
 		if status == 0x01:
-    		print('System error: {0}'.format(error))
-    		print('See datasheet section 4.3.59 for the meaning.')
+			print('System error: {0}'.format(error))
+			print('See datasheet section 4.3.59 for the meaning.')
 
 		# Create Robot's Kalman filter
 		# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
@@ -150,9 +150,6 @@ class Robot:
 
 		return
 
-	#update current gas concentration readings
-	def updateGas(self):
-		
 
 	#########################
 	#Communication Functions#
@@ -252,7 +249,7 @@ class Robot:
 	#end robot
 	def quit(self):
 		self.stop()
-	 	self.keepRunning = False
+		self.keepRunning = False
 
 
 	##################
