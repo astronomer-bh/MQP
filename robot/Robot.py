@@ -21,6 +21,8 @@ import math
 from threading import Thread, Lock
 import socket
 import pickle
+import serial
+
 from custom_libs import encoding_TCP as encode
 from custom_libs import RobotNavigationEKF as EKF
 import argparse
@@ -56,6 +58,11 @@ class Robot:
 	IMU_SERIAL_PORT = "/dev/ttyAMA0"
 	IMU_GPIO_PIN = 18
 
+	#arduino initialization
+	#TODO: Is this real? Sorrect port? Might conflict with robot
+	ARDU_SERIAL_PORT = '/dev/tty.usbserial'
+	ARDU_BAUD_RATE = 9600
+
 
 	def __init__(self, id):
 		self.id = id
@@ -76,13 +83,16 @@ class Robot:
 
 		#encoder tidbits
 		self.dist = 0
-		self.ang = curpos[2]
+		self.ang = self.curpos[2]
 
 		#start in full mode so it can charge and not be a pain
-		self.robot = create.Create(ROBOT_SERIAL_PORT, startingMode=3)
+		self.robot = create.Create(Robot.ROBOT_SERIAL_PORT, startingMode=3)
 
 		#open connection to imu (BNO055)
-		self.bno = BNO055.BNO055(serial_port=IMU_SERIAL_PORT, rst=IMU_GPIO_PIN)
+		self.bno = BNO055.BNO055(serial_port=Robot.IMU_SERIAL_PORT, rst=Robot.IMU_GPIO_PIN)
+
+		#open connection to arduino
+		self.ardu = serial.Serial(Robot.ARDU_SERIAL_PORT, Robot.ARDU_BAUD_RATE)
 
 		# Initialize the BNO055 and stop if something went wrong.
 		if not bno.begin():
@@ -149,6 +159,11 @@ class Robot:
 		self.vel = math.sqrt(math.pow(z[3], 2) + math.pow(z[4], 2))
 
 		return
+
+	# grabs serial port data
+	def updateGas(self):
+		if 0:
+			ardu.readLine
 
 
 	#########################
@@ -312,5 +327,5 @@ class Robot:
 parser = argparse.ArgumentParser()
 parser.add_argument("id", type=int, help="assign ID to robot")
 args = parser.parse_args()
-robot(args.id)
+robot = Robot(args.id)
 robot.main()

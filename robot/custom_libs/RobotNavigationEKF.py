@@ -6,7 +6,7 @@ from sympy import symbols, Matrix
 class RobotNavigationEKF:
 
     def __init__(self, stdTheta, stdV, stdD, stdAD, stdAV, stdAG,
-    P=Matrix(5, 5, f), estX=[0,0,0,0,0]):
+    P=sympy.eye(3), estX=[0,0,0,0,0]):
         self.stdTheta = stdTheta
         self.stdV = stdV
         self.stdD = stdD
