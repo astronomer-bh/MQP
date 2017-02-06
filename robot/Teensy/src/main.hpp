@@ -1,0 +1,2 @@
+void blinkLED();
+void report();

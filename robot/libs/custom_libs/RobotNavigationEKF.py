@@ -6,11 +6,11 @@ from sympy import symbols, Matrix
 class RobotNavigationEKF:
 
     def __init__(self, stdTheta, stdV, stdD, stdAD, stdAV, stdAG,
-    P=sympy.eye(3), estX=[0,0,0,0,0]):
+    P=sympy.eye(3), estX=Matrix([[0],[0],[0],[0],[0]])):
         self.stdTheta = stdTheta
         self.stdV = stdV
         self.stdD = stdD
-        updateProcError(stdAD, stdAV, stdAG)
+        self.updateProcError(stdAD, stdAV, stdAG)
         self.P = P
 
         self.M = Matrix([[stdTheta ** 2, 0, 0],
@@ -28,7 +28,7 @@ class RobotNavigationEKF:
 
     # Jacobian of the State Transition Matrix with respect to X (state)
     def stateTransXJacob(self, delD, delV, delTheta):
-        theta = self.estX(4)
+        theta = self.estX[4]
         Fx = Matrix([[1, 0, 0, 0, -delD * sympy.sin(theta + delTheta)],
                     [0, 1, 0, 0, delD * sympy.cos(theta + delTheta)],
                     [0, 0, 0, 0, -delV * sympy.sin(theta + delTheta)],
@@ -38,7 +38,7 @@ class RobotNavigationEKF:
 
     # Jacobian of the State Transition Matrix with respect to u (controller)
     def stateTransUJacob(self, delD, delV, delTheta):
-        theta = self.estX(4)
+        theta = self.estX[4]
         Fu = Matrix([[-delD * sympy.sin(theta + delTheta), 0, sympy.cos(theta + delTheta)],
                     [delD * sympy.cos(theta + delTheta), 0, sympy.sin(theta + delTheta)],
                     [-delV * sympy.sin(theta + delTheta), sympy.cos(theta + delTheta), 0],
@@ -48,7 +48,7 @@ class RobotNavigationEKF:
 
     # Process Noise Covariance Matrix
     def procNoiseCovar(self, delD, delV, delTheta):
-        theta = self.estX(4)
+        theta = self.estX.row[4]
         Fu = state_trans_ujacobian(delD, delV, delTheta)
         Q = (Fu.dot(M)).dot(Transpose(Fu))  # I'm not sure if I can do this, maybe an error
         return Q
@@ -73,7 +73,7 @@ class RobotNavigationEKF:
 
     # Jacobian of the Expected Measurement Function with respect to X (state)
     def HJacob(self, dt):
-        HJacobobian = Matrix([[dt ** (-2), 0, 0, 0, 0],
+        HJacobian = Matrix([[dt ** (-2), 0, 0, 0, 0],
                             [0, dt ** (-2), 0, 0, 0],
                             [0, 0, dt ** (-1), 0, 0],
                             [0, 0, 0, dt ** (-1), 0],

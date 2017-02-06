@@ -30,6 +30,9 @@ import argparse
 import logging
 from Adafruit_BNO055 import BNO055
 
+import sympy
+from sympy import symbols, Matrix
+
 class Robot:
 	#driving constants
 	#cm/s (probably. taken from create.py)
@@ -46,21 +49,21 @@ class Robot:
 	ANGMARG = .05
 
 	#robot initialization
-	ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
+	ROBOT_SERIAL_PORT = "/dev/ttyUSB1"
 
 	#TCP/IP socket
 	#Create a TCP/IP socket
 	PORT = 5732
-	SERVER_IP = "192.168.0.102"
+	SERVER_IP = "192.168.0.101"
 	server_address = (SERVER_IP, PORT)
 
 	#imu initialization
-	IMU_SERIAL_PORT = "/dev/ttyAMA0"
+	IMU_SERIAL_PORT = "/dev/ttyUSB0"
 	IMU_GPIO_PIN = 18
 
 	#arduino initialization
 	#TODO: Is this real? Sorrect port? Might conflict with robot
-	ARDU_SERIAL_PORT = '/dev/tty.usbserial'
+	ARDU_SERIAL_PORT = '/dev/ttyACM0'
 	ARDU_BAUD_RATE = 9600
 
 
@@ -95,11 +98,11 @@ class Robot:
 		self.ardu = serial.Serial(Robot.ARDU_SERIAL_PORT, Robot.ARDU_BAUD_RATE)
 
 		# Initialize the BNO055 and stop if something went wrong.
-		if not bno.begin():
+		if not self.bno.begin():
 			raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
 
 		# Print BNO055 status and self test result.
-		status, self_test, error = bno.get_system_status()
+		status, self_test, error = self.bno.get_system_status()
 		print('System status: {0}'.format(status))
 		print('Self test result (0x0F is normal): 0x{0:02X}'.format(self_test))
 		# Print out an error if imu status is in error mode.
@@ -145,12 +148,12 @@ class Robot:
 		accl_x, accl_y, accl_z = self.bno.read_accelerometer()
 
 		#send to EKF
-		z = Matriz([[accl_x],
+		z = Matrix([[accl_x],
 					[accl_y],
 					[accl_x],
 					[accl_y],
 					[gyro_z]])
-		estX = filter.KalmanFilter(z, deltadist, delaang, deltat)
+		estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
 
 		#update position bits
 		self.curpos[0] = z[0]
@@ -173,10 +176,10 @@ class Robot:
 	def initComms(self):
 		# Connect the socket to the port where the server is listening
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		print("connecting to %s port %s" %server_address)
-		self.sock.connect(server_address)
+		print("connecting to %s port %s" %Robot.server_address)
+		self.sock.connect(Robot.server_address)
 
-		time.sleep(COMMS_DELAY)
+		time.sleep(Robot.COMMS_DELAY)
 
 	def loopComms(self):
 		try:

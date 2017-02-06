@@ -19,7 +19,6 @@ import sys
 import pickle
 import threading
 from custom_libs import encoding_TCP as encode
-from lib/custom_libs import Robot_Navigation_EKF as EKF
 
 #driving constants
 #cm/s (probably. taken from create.py)
@@ -84,7 +83,7 @@ def comms():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 	#Bind the socket to the port
-	HOST = '192.168.0.102'
+	HOST = '192.168.0.101'
 	PORT = 5732
 	server_address = (HOST, PORT)
 	print("starting up on %s port %s" %server_address)
