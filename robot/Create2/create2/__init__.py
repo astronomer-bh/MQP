@@ -120,10 +120,14 @@ class Robot(object):
 
         return self.robot.sensor_state['angle']
 
+
     def _get_sensor_packet(self):
 
         #Packet 100 contains all sensor data.
         self.robot.get_packet(100)
+
+    def goHome(self):
+        self.robot.seek_dock()
 
 class _Error(Exception):
     """Error"""

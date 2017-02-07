@@ -6,15 +6,15 @@
 #\_|   |_|\__,_|_| |_| |_|\___| \_|  |_/\_/\_\_|
 #
 #
-#robot.py
+#Create2.py
+#testing function for the Create2
+#no external sensor integration
 #
 #Python interface for Plume MQP robot
 #
 #Ryan Wiesenberg
 #Eric Fast
 #Stepthen Harnais
-
-
 
 import time
 import sys
@@ -25,7 +25,7 @@ import pickle
 
 sys.path.append('../libs/')
 from custom_libs import encoding_TCP as encode
-from breezycreate2 import Robot
+from create2 import Robot
 
 #driving constants
 #cm/s (probably. taken from create.py)
