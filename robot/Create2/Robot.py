@@ -174,25 +174,25 @@ class Robot:
 
 		time.sleep(Robot.COMMS_DELAY)
 
+		#send robot id so the base knows who is connecting
+		encode.sendPacket(sock=self.sock, message=self.id)
+
 	def loopComms(self):
-		try:
-			snd = [self.id, self.curpos]
-			#send curpos
-			encode.sendPacket(sock=self.sock, message=snd)
+		snd = [self.id, self.curpos]
+		#send curpos
+		encode.sendPacket(sock=self.sock, message=snd)
 
-			#recieve message
-			rcv = encode.recievePacket(sock=self.sock)
-			print(rcv)
+		#recieve message
+		rcv = encode.recievePacket(sock=self.sock)
+		print(rcv)
 
-			#determine what to do with message
-			if rcv == "out":
-				quit()
-			else:
-				desired[0] = rcv[0]
-				desired[1] = rcv[1]
-			self.tCoord()
-		except:
-			pass
+		#determine what to do with message
+		if rcv == "out":
+			quit()
+		else:
+			desired[0] = rcv[0]
+			desired[1] = rcv[1]
+		self.tCoord()
 
 	def terminateComms(self):
 		#close socket

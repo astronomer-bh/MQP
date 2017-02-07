@@ -1,99 +1,67 @@
 import sympy
-from sympy import symbols, Matrix
 
-# Titles of functions are BELOW their respective function to avoid PEP8 complaints
+def state_trans_xjacobian(del_D, del_V, del_theta, theta):
+    Fx = sympy.Matrix([[1, 0, 0, 0, -del_D * sympy.sin(theta + del_theta)],
+                [0, 1, 0, 0, del_D * sympy.cos(theta + del_theta)],
+                [0, 0, 0, 0, -del_V * sympy.sin(theta + del_theta)],
+                [0, 0, 0, 0, del_V * sympy.cos(theta + del_theta)],
+                [0, 0, 0, 0, 1]])
+    return Fx
+# Jacobian of the State Transition Matrix with respect to X (state)
 
-class RobotNavigationEKF:
 
-    def __init__(self, stdTheta, stdV, stdD, stdAD, stdAV, stdAG,
-    P=sympy.eye(3), estX=Matrix([[0],[0],[0],[0],[0]])):
-        self.stdTheta = stdTheta
-        self.stdV = stdV
-        self.stdD = stdD
-        self.updateProcError(stdAD, stdAV, stdAG)
-        self.P = P
+def state_trans_ujacobian(del_D, del_V, del_theta, theta):
+    Fu = sympy.Matrix([[-del_D * sympy.sin(theta + del_theta), 0, sympy.cos(theta + del_theta)],
+                [del_D * sympy.cos(theta + del_theta), 0, sympy.sin(theta + del_theta)],
+                [-del_V * sympy.sin(theta + del_theta), sympy.cos(theta + del_theta), 0],
+                [del_V * sympy.cos(theta + del_theta), sympy.sin(theta + del_theta), 0],
+                [1, 0, 0]])
+    return Fu
+# Jacobian of the State Transition Matrix with respect to u (controller)
 
-        self.M = Matrix([[stdTheta ** 2, 0, 0],
-                        [0, stdV ** 2, 0],
-                        [0, 0, stdD ** 2]])
 
-        # Process Error Covariance Matrix
-        self.R = Matrix([[stdAD ** 2, 0, 0, 0, 0],
-                        [0, stdAV ** 2, 0, 0, 0],
-                        [0, 0, stdAV ** 2, 0, 0],
-                        [0, 0, 0, stdAV ** 2, 0],
-                        [0, 0, 0, 0, stdAG ** 2]])
+def proc_noise_covar(std_theta, std_V, std_D, Fu):
+    M = sympy.Matrix([[std_theta ** 2, 0, 0],
+                [0, std_V ** 2, 0],
+                [0, 0, std_D ** 2]])
+    Q = Fu*M*sympy.Transpose(Fu)
+    return Q
+# Process Noise Covariance Matrix
 
-        self.estX = estX
 
-    # Jacobian of the State Transition Matrix with respect to X (state)
-    def stateTransXJacob(self, delD, delV, delTheta):
-        theta = self.estX[4]
-        Fx = Matrix([[1, 0, 0, 0, -delD * sympy.sin(theta + delTheta)],
-                    [0, 1, 0, 0, delD * sympy.cos(theta + delTheta)],
-                    [0, 0, 0, 0, -delV * sympy.sin(theta + delTheta)],
-                    [0, 0, 0, 0, delV * sympy.cos(theta + delTheta)],
-                    [0, 0, 0, 0, 1]])
-        return Fx
+def proc_error_covar(Fx,Q,P_old):
+    P = Fx*P_old*sympy.Transpose(Fx) + Q
+    return P
+# Process Error Covariance Matrix
 
-    # Jacobian of the State Transition Matrix with respect to u (controller)
-    def stateTransUJacob(self, delD, delV, delTheta):
-        theta = self.estX[4]
-        Fu = Matrix([[-delD * sympy.sin(theta + delTheta), 0, sympy.cos(theta + delTheta)],
-                    [delD * sympy.cos(theta + delTheta), 0, sympy.sin(theta + delTheta)],
-                    [-delV * sympy.sin(theta + delTheta), sympy.cos(theta + delTheta), 0],
-                    [delV * sympy.cos(theta + delTheta), sympy.sin(theta + delTheta), 0],
-                    [1, 0, 0]])
-        return Fu
+def meas_noise_covar(std_ad, std_av, std_ag):
+    R = sympy.Matrix([[std_ad ** 2, 0, 0, 0, 0],
+                [0, std_ad ** 2, 0, 0, 0],
+                [0, 0, std_av ** 2, 0, 0],
+                [0, 0, 0, std_av ** 2, 0],
+                [0, 0, 0, 0, std_ag ** 2]])
+    return R
+# Measurement Noise Covariance Matrix
 
-    # Process Noise Covariance Matrix
-    def procNoiseCovar(self, delD, delV, delTheta):
-        theta = self.estX.row[4]
-        Fu = state_trans_ujacobian(delD, delV, delTheta)
-        Q = (Fu.dot(M)).dot(Transpose(Fu))  # I'm not sure if I can do this, maybe an error
-        return Q
 
-    # Process Error Covariance Matrix
-    def procErrorCovar(self, delD, delV, delTheta):
-        Fx = self.stateTransXJacob(delD, delV, delTheta)
-        tempP = (Fx.dot(self.P)).dot(Transpose(Fx))
-        Q = self.procNoiseCovar(delD, delV, delTheta)
-        self.P = MatAdd(tempP, Q)
+def HJacob(dt):
+    HJacobian = sympy.Matrix([[dt ** (-2), 0, 0, 0, 0],
+                 [0, dt ** (-2), 0, 0, 0],
+                 [0, 0, dt ** (-1), 0, 0],
+                 [0, 0, 0, dt ** (-1), 0],
+                 [0, 0, 0, 0, dt ** (-1)]])
+    return HJacobian
+# Jacobian of the Expected Measurement Function with respect to X (state)
 
-    # update process error of EKF
-    def updateProcError(self, stdAD, stdAV, stdAG):
-        self.stdAD = stdAD
-        self.stdAV = stdAV
-        self.stdAG = stdAG
-        self.R = Matrix([[stdAD ** 2, 0, 0, 0, 0],
-                        [0, stdAD ** 2, 0, 0, 0],
-                        [0, 0, stdAV ** 2, 0, 0],
-                        [0, 0, 0, stdAV ** 2, 0],
-                        [0, 0, 0, 0, stdAG ** 2]])
 
-    # Jacobian of the Expected Measurement Function with respect to X (state)
-    def HJacob(self, dt):
-        HJacobian = Matrix([[dt ** (-2), 0, 0, 0, 0],
-                            [0, dt ** (-2), 0, 0, 0],
-                            [0, 0, dt ** (-1), 0, 0],
-                            [0, 0, 0, dt ** (-1), 0],
-                            [0, 0, 0, 0, dt ** (-1)]])
-        return HJacobian
+def h_funk(HJacob,x_hat_old):
+    h = Hjacob*x_hat_old
+    return h
+# Expected Measurement Function (as a function of its own Jacobian (O.O)  )
 
-    # Expected Measurement Function (as a function of its own Jacobian (O.O)  )
-    def h(self, dt):
-        h = self.Hjacob(dt).dot(self.estX)
-        return h
-
-    # The big shebang
-    def KalmanFilter(self, z, delD, delTheta, dt):
-        delV = delD/dt;
-        HJacobian = self.HJacob(dt)
-        self.procErrorCovar(delD, delV, delTheta)
-        S = MatAdd((HJacobian.dot(self.P)).dot(Transpose(HJacobian)), self.R)
-        K = (self.P.dot(HJacobian)).dot(Inverse(S))
-        tempP = ((K.dot(S)).Transpose(K)).dot(-1)
-        self.oldP = MatAdd(self.P, tempP)
-        h = self.h(dt)                    # P_old fot the next pass
-        self.estX = self.estX + K.dot(z-h)
-        return estX
+def KalmanFilter(HJacobian, P, R, x_hat_old, z, h):
+    S = HJacobian*P*HJacobian.transpose()+R   	# Innovation Matrix
+    K = P*HJacobian*S.inv()       			# Kalman Gain
+    P_next = P-K*S*K.transpose()      # P_old fot the next pass
+    x_hat = x_hat_old+K*(z-h)
+    return P_next, x_hat
