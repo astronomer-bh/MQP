@@ -34,4 +34,12 @@ If this does not work or a specific dependency fails you may have to look up thi
 - Adafruit-GPIO
 
 ## Usage
-In this directory there are two essential python codes, Create1 and Create.
+In this directory there are two essential python codes, Create1 and Create2. Create1.py is the code used for the original iRobot Create (the white one) and as such may not work entirely with the updates made for the Create2. Its code base is from the pycreate module but may not work as is with changed made to the project. Create2.py is the current setup for the project which uses an iRobot Create2 in conjunction with the framework of breezycreate2, a separate github repository which has been modified to fix some errors and add a few more functions to the API.
+
+Before running Create2.py, the base station's code should already be running, otherwise the robot will spit back a connection error associated with not seeing the base. See the base directory for those instructions. To run the code on the Create2 simply run the following line of code in this directory:
+~~~~
+python3 Create2.py 0
+~~~~
+The terminating 0 signifies the robot's ID number and can be changed if running multiple robots simultaneously. This ID should be set to match the ID of the AprilTag on the robot as to not confuse the future potential quadcopter. This code will report back the current desired velocities and send to the base station the robot's ID, current position, orientation, and sensor data.
+
+### Runtime Commands
