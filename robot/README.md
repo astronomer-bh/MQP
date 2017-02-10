@@ -23,13 +23,14 @@ The following command will install python and its dependencies and sub packages:
 ~~~~
 sudo apt-get install -y build-essential python-dev python-smbus python-pip python3-pip upstart
 sudo -H python3 -m pip install --upgrade pip 
-sudo -H python3 -m pip install pyserial sympy Adafruit-GPIO
+sudo -H python3 -m pip install pyserial sympy Adafruit-GPIO numpy
 ~~~~
 If this does not work or a specific dependency fails you may have to look up thier new installation paths. The list of dependencies are as follows:
 - Python-Dev (for Python 3)
 - Python-Pip (Python package installer)
 - PySerial
 - SymPy
+- NumPy
 - Adafruit-GPIO
 
 ## Usage
