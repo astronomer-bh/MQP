@@ -9,3 +9,6 @@ The base station takes the location and concentration data from the robot and th
 
 ## Field (C/C++)
 This code utilizes AprilTags and an overhead camera to determine the physical location of the robot for verification of the validity of the Kalman Filter in use by the Robot. This program is also a stepping stone to using a quadcopter for future localization of a multi-robot system.
+
+## Copter (C/C++)
+This code is the further implementation of the field code. Added a few classes for interrobot communication. Incomplete.
