@@ -104,8 +104,10 @@ def comms():
 			#recieve posn
 			rcv = encode.recievePacket(sock=conn)
 
+			if rcv == None:
+				out == True
 			#print x,y,theta,velocity
-			print(snd)
+			print(rcv)
 
 			#send desired velocities
 			encode.sendPacket(sock=conn, message=desired)

@@ -29,8 +29,9 @@ import struct
 import warnings
 import time
 import pkg_resources
+import numpy as np
 
-class Robot(object):
+class iRobot(object):
 
     def __init__(self, port='/dev/ttyUSB0', baud=115200):
         '''
@@ -106,8 +107,7 @@ class Robot(object):
         '''
         Returns distance as a number.
         '''
-
-        self._get_sensor_packet()
+        self.robot.get_packet(19)
 
         return self.robot.sensor_state['distance']
 
@@ -115,8 +115,7 @@ class Robot(object):
         '''
         Returns distance as a number.
         '''
-
-        self._get_sensor_packet()
+        self.robot.get_packet(20)
 
         return self.robot.sensor_state['angle']
 
@@ -1749,7 +1748,7 @@ class _sensorPacketDecoder(object):
                 high: The high byte o the 2's complement.
             Returns: 16bit unsigned short
         """
-        return ord(high) << 8 | ord(low) # XXX does this discard sign?
+        return np.uint16(ord(high) << 8 | ord(low)) # XXX does this discard sign?
 
     def decode_short(self, low, high):
         """ Decode an 16 bit short from two bytes.
@@ -1760,7 +1759,7 @@ class _sensorPacketDecoder(object):
                 high: The high byte of the 2's complement.
             Returns: 16bit short
         """
-        return ord(high) << 8 | ord(low) # XXX does this discard sign?
+        return np.int16(ord(high) << 8 | ord(low)) # XXX does this discard sign?
 
     def decode_byte(self, byte):
         """ Decode a signed byte into a signed char

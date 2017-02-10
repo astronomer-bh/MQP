@@ -25,14 +25,13 @@ import pickle
 
 sys.path.append('../libs/')
 from custom_libs import encoding_TCP as encode
-from create2 import Robot
+from breezycreate2 import iRobot
 
 #driving constants
 #cm/s (probably. taken from create.py)
-MAX_SPEED = 50
-MIN_SPEED = -50
-DRIVE_SPEED = 20
-TURN_SPEED = 5
+MAX_SPEED = 500
+MIN_SPEED = -500
+TURN_SPEED = 100
 STOP = 0
 
 #position initalization
@@ -57,9 +56,9 @@ ang = curpos[2]
 ANGMARG = .05
 
 #robot initialization
-SERIAL_PORT = "/dev/ttyUSB0"
+SERIAL_PORT = "/dev/ttyUSB1"
 #start in full mode so it can charge and not be a pain
-robot = Robot()
+robot = iRobot(SERIAL_PORT)
 robot.playNote('A4', 10)
 #robot.robot.full()
 
@@ -69,28 +68,27 @@ COMMS_DELAY = 1
 # TODO: things besides encoders maybe?
 def update():
 	#misleading name b/c its distance and angle but words escape me
-	global startt, endt, curpos, vel, dist, ang
+	global startt, endt, curpos, vel
 
 	deltadist = 0
 	deltaang = 0
 
+
 	#update time change
 	endt = time.time()
-
 	deltat = endt - startt
 	startt = time.time()
 
 	#calculate encoder bits
 	deltadist = robot.getDistance()
 	deltaang = robot.getAngle()*math.pi/180
-	dist += deltadist
-	ang += deltaang
 
 	#update position bits
-	curpos[2] = ang
+	curpos[2] += deltaang
 	curpos[2] = math.fmod(curpos[2], (2 * math.pi))
 	curpos[0] += deltadist*math.cos(curpos[2])
 	curpos[1] += deltadist*math.sin(curpos[2])
+	print(curpos)
 	vel = deltadist/deltat
 
 	return
@@ -214,8 +212,6 @@ def comms():
 		try:
 			#recieve message
 			rcv = encode.recievePacket(sock=sock)
-
-			print(rcv)
 
 			#determine what to do with message
 			if rcv == "out":

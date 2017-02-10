@@ -20,10 +20,12 @@ import math
 import socket
 import pickle
 import serial
+import argparse
 
 sys.path.append('../libs/')
 from custom_libs import encoding_TCP as encode
-from create2 import Robot
+from custom_libs import NaviEKF as EKF
+from create2 import iRobot
 
 import logging
 from Adafruit_BNO055 import BNO055
@@ -37,7 +39,7 @@ class Robot:
 	MAX_SPEED = 50
 	MIN_SPEED = -50
 	DRIVE_SPEED = 20
-	TURN_SPEED = 5
+	TURN_SPEED = 20
 	STOP = 0
 
 	#SENSING A TREND HERE
@@ -88,7 +90,7 @@ class Robot:
 
 		#connect robot
 		#TODO: start in full mode. not working correctly as is
-		self.robot = Robot()
+		self.robot = iRobot(Robot.ROBOT_SERIAL_PORT)
 		self.robot.playNote('A4', 10) #say hi!
 
 		#open connection to arduino
@@ -112,7 +114,7 @@ class Robot:
 
 		# Create Robot's Kalman filter
 		# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
-		self.filter = EKF.RobotNavigationEKF(0, 0, 0, 0, 0, 0)
+		self.filter = EKF.RobotNavigationEKF(.00006, .00006, .000006, .001, .001, .001)
 
 		# Start TCP Connention
 		self.initComms()
@@ -132,11 +134,11 @@ class Robot:
 		deltat = self.endt - self.startt
 		self.startt = time.time()
 
-		#calculate encoder bits
+		#calculate encoder bits (mm & rad)
 		deltadist = self.robot.getDistance()
 		deltaang = self.robot.getAngle()*math.pi/180
 
-		#pull imu bits
+		#pull imu bits (m?)
 		gyro_x, gyro_y, gyro_z = self.bno.read_gyroscope()
 		accl_x, accl_y, accl_z = self.bno.read_accelerometer()
 
@@ -145,14 +147,14 @@ class Robot:
 					[accl_y],
 					[accl_x],
 					[accl_y],
-					[gyro_z]])
+					[gyro_z*math.pi/180]])
 		estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
 
 		#update position bits
-		self.curpos[0] = z[0]
-		self.curpos[1] = z[1]
-		self.curpos[2] = math.fmod(z[5], (2 * math.pi))
-		self.vel = math.sqrt(math.pow(z[3], 2) + math.pow(z[4], 2))
+		self.curpos[0] = estX[0]
+		self.curpos[1] = estX[1]
+		self.curpos[2] = math.fmod(estX[4], (2 * math.pi))
+		self.vel = math.sqrt(math.pow(estX[2], 2) + math.pow(estX[3], 2))
 
 		return
 
@@ -190,9 +192,8 @@ class Robot:
 		if rcv == "out":
 			quit()
 		else:
-			desired[0] = rcv[0]
-			desired[1] = rcv[1]
-		self.tCoord()
+			self.desired[0] = rcv[0]
+			self.desired[1] = rcv[1]
 
 	def terminateComms(self):
 		#close socket
@@ -224,8 +225,8 @@ class Robot:
 	#movement control
 	#decide turn or straight
 	def move(self):
-		upper = thetad + ANGMARG
-		lower = thetad - ANGMARG
+		upper = self.thetad + Robot.ANGMARG
+		lower = self.thetad - Robot.ANGMARG
 
 		if((self.curpos[2] <= upper) and (self.curpos[2] >= lower)):
 			self.drive()
@@ -238,17 +239,17 @@ class Robot:
 
 	#drive desired velocity
 	def drive(self):
-		self.robot.setForwardSpeed(veld)
+		self.robot.setForwardSpeed(self.veld)
 		return
 
 	#turn Counter Clockwise
 	def turnCCW(self):
-		self.robot.setTurnSpeed(-TURNSPEED)
+		self.robot.setTurnSpeed(-Robot.TURN_SPEED)
 		return
 
 	#turn Clockwise
 	def turnCW(self):
-		self.robot.setTurnSpeed(TURNSPEED)
+		self.robot.setTurnSpeed(Robot.TURN_SPEED)
 		return
 
 	#end robot
@@ -267,6 +268,7 @@ class Robot:
 			self.updatePosn()
 			self.updateGas()
 			self.loopComms()
+			self.tCoord()
 			self.move()
 		self.terminate()
 
