@@ -25,6 +25,8 @@ import logging
 import sympy
 from sympy import symbols, Matrix
 
+sys.path.append('libs/')
+
 from libs.custom_libs import encoding_TCP as encode
 from libs.custom_libs import NaviEKF as EKF
 from libs.breezycreate2 import iRobot
@@ -111,7 +113,7 @@ class Robot:
 
 		# Create Robot's Kalman filter
 		# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
-		self.filter = EKF.RobotNavigationEKF(.00006, .00006, .000006, .001, .001, .001)
+		self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
 
 		# Start TCP Connention
 		self.initComms()
@@ -132,7 +134,7 @@ class Robot:
 		self.startt = time.time()
 
 		#calculate encoder bits (mm & rad)
-		deltadist = self.robot.getDistance()
+		deltadist = self.robot.getDistance()/1000
 		deltaang = self.robot.getAngle()*math.pi/180
 
 		#pull imu bits (m?)
@@ -140,12 +142,13 @@ class Robot:
 		accl_x, accl_y, accl_z = self.bno.read_accelerometer()
 
 		#send to EKF
-		z = Matrix([[accl_x],
+		z = Matrix([[-accl_x],
 					[accl_y],
-					[accl_x],
+					[-accl_x],
 					[accl_y],
 					[gyro_z*math.pi/180]])
 		estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
+
 
 		#update position bits
 		self.curpos[0] = estX[0]
@@ -183,7 +186,6 @@ class Robot:
 
 		#recieve message
 		rcv = encode.recievePacket(sock=self.sock)
-		print(rcv)
 
 		#determine what to do with message
 		if rcv == "out":

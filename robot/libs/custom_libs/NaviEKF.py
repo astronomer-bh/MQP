@@ -69,6 +69,14 @@ class RobotNavigationEKF:
         else:
             self.P = temP + Q
 
+    def updateEstX(self, delD, delV, delTheta):
+        newX = sympy.Matrix([[self.estX[0]+delD*sympy.cos(self.estX[4]+delTheta)],
+                            [self.estX[1]+delD*sympy.cos(self.estX[4]+delTheta)],
+                            [delV*sympy.cos(self.estX[4]+delTheta)],
+                            [delV*sympy.sin(self.estX[4]+delTheta)],
+                            [self.estX[4]+delTheta]])
+        self.estX = newX
+
 
     # update process error of EKF
     def updateProcError(self, stdAD, stdAV, stdAG):
@@ -103,6 +111,7 @@ class RobotNavigationEKF:
         S = HJacobian*self.P*HJacobian.transpose() + self.R
         K = self.P*HJacobian*S.inv()
         self.P = self.P-K*S*K.transpose()
+        self.updateEstX(delD, delV, delTheta)
         h = self.h(dt)
         self.estX = self.estX + K*(z-h)
         return self.estX
