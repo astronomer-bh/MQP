@@ -44,3 +44,14 @@ The terminating 0 signifies the robot's ID number and can be changed if running 
 
 ### Runtime Commands
 -id: Sets the robot's ID for communicating with the base station properly
+
+## Walkthrough
+
+## Libraries
+### Adafruit_BNO055
+![alt text](https://github.com/rmwiesenberg/MQP/blob/master/robot/libs/Adafruit_BNO055/sensors_raspberry_pi_bb.png "BNO055 Hookup")
+### Teensy
+### breezycreate2
+### pycreate
+### TCP (custom_libs)
+### EKF (custom_libs)
