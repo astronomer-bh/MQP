@@ -43,3 +43,4 @@ python3 Create2.py 0
 The terminating 0 signifies the robot's ID number and can be changed if running multiple robots simultaneously. This ID should be set to match the ID of the AprilTag on the robot as to not confuse the future potential quadcopter. This code will report back the current desired velocities and send to the base station the robot's ID, current position, orientation, and sensor data.
 
 ### Runtime Commands
+-id: Sets the robot's ID for communicating with the base station properly
