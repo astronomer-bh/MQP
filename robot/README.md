@@ -8,7 +8,8 @@ The field requires several packages to run and must be placed in the proper dire
 #### Dependencies
 Please copy and paste the following command into your RaspberryPi's terminal. Make sure that all other packages have been updated prior to install by running:
 ~~~~
-sudo apt-get update && sudo apt-get install upstart
+sudo apt-get update 
+sudo apt-get install upstart
 sudo apt-get dist-upgrade
 ~~~~
 You must also add your user to dialout in order to use and communicate with all of the external components (iRobot, IMU, Teensy). Then reload the terminal you are working in
