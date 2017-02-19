@@ -9,7 +9,7 @@ from custom_libs import encoding_TCP as encode
 keepRunning = True
 
 class Base:
-    def __init__(self, IP):
+    def __init__(self, ip):
         #open keyboard thread
         #I wish I didn't have to do this...
         self.kb_thread = threading.Thread(name = "kb_thread", target=self.kbinput)
@@ -35,6 +35,9 @@ class Base:
             self.robots[ID].start()
             self.robots[ID].join()
 
+    def runRobot(self, id, ip):
+        self.comms
+
 
 
 
@@ -42,6 +45,6 @@ class Base:
 #Create Base Station and Run#
 #############################
 parser = argparse.ArgumentParser()
-parser.add_argument("IP", type=str, help="base station's ip address")
+parser.add_argument("--IP", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
 args = parser.parse_args()
-base = Base(args.IP)
+base = Base(args.ip)

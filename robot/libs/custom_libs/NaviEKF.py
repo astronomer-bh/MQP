@@ -91,12 +91,12 @@ class RobotNavigationEKF:
 
     # Jacobian of the Expected Measurement Function with respect to X (state)
     def HJacob(self, dt):
-        HJacobian = Matrix([[dt ** (-2), 0, 0, 0, 0],
-                            [0, dt ** (-2), 0, 0, 0],
-                            [0, 0, dt ** (-1), 0, 0],
-                            [0, 0, 0, dt ** (-1), 0],
-                            [0, 0, 0, 0, dt ** (-1)]])
-        return HJacobian
+        HJacob = sympy.Matrix([[(1/(dt**(2)*sympy.cos(self.estX[4]))), (1/(dt**(2)*sympy.sin(self.estX[4]))), 0, 0, 0],
+                                [(1/(dt**(2)*sympy.sin(self.estX[4]))), (1/(dt**(2)*sympy.cos(self.estX[4]))), 0, 0, 0],
+                                [0, 0, (1/(dt*sympy.cos(self.estX[4]))), (1/(dt*sympy.sin(self.estX[4]))), 0],
+                                [0, 0, (1/(dt*sympy.sin(self.estX[4]))), (1/(dt*sympy.cos(self.estX[4]))), 0],
+                                [0, 0, 0, 0, (1/dt)]])
+        return HJacob
 
     # Expected Measurement Function (as a function of its own Jacobian (O.O)  )
     def h(self, dt):

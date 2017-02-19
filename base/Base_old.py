@@ -18,8 +18,10 @@ import socket
 import sys
 import pickle
 import threading
+import numpy as np
+import cv2
 
-sys.path.append('../libs/')
+sys.path.append('libs/')
 from custom_libs import encoding_TCP as encode
 
 #driving constants
@@ -85,7 +87,7 @@ def comms():
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 	#Bind the socket to the port
-	HOST = '192.168.0.101'
+	HOST = '192.168.0.100'
 	PORT = 5732
 	server_address = (HOST, PORT)
 	print("starting up on %s port %s" %server_address)

@@ -41,20 +41,8 @@ class Robot:
 	TURN_SPEED = 20
 	STOP = 0
 
-	#SENSING A TREND HERE
-	#delay for sensor update. Too fast and the encoders get pissy
-	SENS_DELAY = .1
-	COMMS_DELAY = 1
-	ANGMARG = .05
-
 	#robot initialization
 	ROBOT_SERIAL_PORT = "/dev/ttyUSB1"
-
-	#TCP/IP socket
-	#Create a TCP/IP socket
-	PORT = 5732
-	SERVER_IP = "192.168.0.101"
-	server_address = (SERVER_IP, PORT)
 
 	#imu initialization
 	IMU_SERIAL_PORT = "/dev/ttyUSB0"
@@ -66,7 +54,7 @@ class Robot:
 	ARDU_BAUD_RATE = 9600
 
 
-	def __init__(self, id):
+	def __init__(self, id, ip):
 		self.id = id
 
 		#position initalization
@@ -95,6 +83,23 @@ class Robot:
 		#open connection to arduino
 		self.ardu = serial.Serial(Robot.ARDU_SERIAL_PORT, Robot.ARDU_BAUD_RATE)
 
+		# start IMU
+		self.initIMU()
+
+		# Create Robot's Kalman filter
+		# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
+		self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
+
+		# Start TCP Connention
+		# ip:port
+		self.initComms(ip, 5732)
+
+
+	###################
+	#Sensor Functions#
+	###################
+
+	def initIMU(self):
 		#open connection to imu (BNO055)
 		self.bno = BNO055.BNO055(serial_port=Robot.IMU_SERIAL_PORT, rst=Robot.IMU_GPIO_PIN)
 
@@ -111,17 +116,15 @@ class Robot:
 			print('System error: {0}'.format(error))
 			print('See datasheet section 4.3.59 for the meaning.')
 
-		# Create Robot's Kalman filter
-		# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
-		self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
+		self.zeroIMU()
+		return
 
-		# Start TCP Connention
-		self.initComms()
+	def zeroIMU(self):
+		# find accelerometer's offset
+		self.gyro_x_offset, self.gyro_y_offset, self.gyro_z_offset = self.bno.read_gyroscope()
+		self.accl_x_offset, self.accl_y_offset, self.accl_z_offset = self.bno.read_accelerometer()
+		return
 
-
-	###################
-	#Sensor Functions#
-	###################
 
 	#update sensors
 	def updatePosn(self):
@@ -142,14 +145,14 @@ class Robot:
 		accl_x, accl_y, accl_z = self.bno.read_accelerometer()
 
 		#send to EKF
-		z = Matrix([[-accl_x],
-					[accl_y],
-					[-accl_x],
-					[accl_y],
-					[gyro_z*math.pi/180]])
+		z = Matrix([[accl_x-self.accl_x_offset],
+					[accl_y-self.accl_y_offset],
+					[accl_x-self.accl_x_offset],
+					[accl_y-self.accl_y_offset],
+					[(gyro_z-self.gyro_z_offset)*math.pi/180]])
 		estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
 
-
+		print(estX)
 		#update position bits
 		self.curpos[0] = estX[0]
 		self.curpos[1] = estX[1]
@@ -158,21 +161,20 @@ class Robot:
 
 		return
 
-	# grabs serial port data
+	# grabs serial port data and splits across commas
 	def updateGas(self):
-		if 0:
-			ardu.readLine
+		self.gas = self.tnsy.readLine().strip().split(",")
 
 
 	#########################
 	#Communication Functions#
 	#########################
 
-	def initComms(self):
+	def initComms(self, ip, port):
 		# Connect the socket to the port where the server is listening
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		print("connecting to %s port %s" %Robot.server_address)
-		self.sock.connect(Robot.server_address)
+		print("connecting to %s port %s" %(ip, port))
+		self.sock.connect(ip, port)
 
 		time.sleep(Robot.COMMS_DELAY)
 
@@ -180,7 +182,7 @@ class Robot:
 		encode.sendPacket(sock=self.sock, message=self.id)
 
 	def loopComms(self):
-		snd = [self.id, self.curpos]
+		snd = [self.id, self.curpos, self.gas]
 		#send curpos
 		encode.sendPacket(sock=self.sock, message=snd)
 
@@ -269,6 +271,8 @@ class Robot:
 			self.loopComms()
 			self.tCoord()
 			self.move()
+			if self.veld == 0:
+				self.zeroIMU()
 		self.terminate()
 
 	def terminate(self):
@@ -279,7 +283,8 @@ class Robot:
 #Create and Run Robot on Pi#
 ############################
 parser = argparse.ArgumentParser()
-parser.add_argument("id", type=int, help="assign ID to robot")
+parser.add_argument("--ID", dest='id', type=int, help="assign ID to robot")
+parser.add_argument("--IP", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
 args = parser.parse_args()
-robot = Robot(args.id)
+robot = Robot(args.id, args.ip)
 robot.main()
