@@ -24,14 +24,6 @@ import cv2
 sys.path.append('libs/')
 from custom_libs import encoding_TCP as encode
 
-#driving constants
-#cm/s (probably. taken from create.py)
-MAX_SPEED = 50
-MIN_SPEED = -50
-DRIVE_SPEED = 20
-TURN_SPEED = 5
-STOP = 0
-
 #position initalization
 curpos = [0, 0, 0]
 desired = [0, 0] 	#x_dot, y_dot, is data unsent
