@@ -20,7 +20,8 @@ void setup(){
 }
 
 void loop(){
-  readSensors();
+  if(Serial2.available()&&Serial3.available()
+    &&Serial4.available()&&Serial5.available()) readSensors();
 }
 
 void readSensors(){
@@ -69,7 +70,7 @@ void readSensors(){
     }
   }
 
-  Serial.print(val);
+  Serial.println(val);
 }
 
 void blinkLED(){
