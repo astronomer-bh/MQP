@@ -51,6 +51,7 @@ The terminating 0 signifies the robot's ID number and can be changed if running 
 ## Libraries
 ### Adafruit_BNO055
 ![alt text](https://github.com/rmwiesenberg/MQP/blob/master/robot/libs/Adafruit_BNO055/IMU.PNG "BNO055 Hookup")
+Thew diagram above shows how to hook up the IMU to the RaspberryPi.
 ### Teensy
 ~~~~
 sudo wget -O /etc/udev/rules.d/49-teensy.rules "https://www.pjrc.com/teensy/49-teensy.rules"
