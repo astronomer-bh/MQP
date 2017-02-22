@@ -51,12 +51,20 @@ The terminating 0 signifies the robot's ID number and can be changed if running 
 ## Libraries
 ### Adafruit_BNO055
 ![alt text](https://github.com/rmwiesenberg/MQP/blob/master/robot/libs/Adafruit_BNO055/IMU.PNG "BNO055 Hookup")
-Thew diagram above shows how to hook up the IMU to the RaspberryPi.
+
+The diagram above shows how to hook up the IMU to the RaspberryPi. Do not forget to hook up the PS1 pin to 3.3V to switch the chip to TX/RX and attach the reset pin to GPIO18. For ease of use a USB to serial cable is used as configuring the pi to communicate over USB is much easier than with the GPIO pins. If you would prefer to use the GPIO pins to free up a USB port refer to this [guide](https://learn.adafruit.com/bno055-absolute-orientation-sensor-with-raspberry-pi-and-beaglebone-black/hardware) by Adafruit. The link also has further uses for the chip as well as instructions for use with a Beaglebone and if the RasPi was running Raspian which the rest of this guide nor the code is geared towards.
 ### Teensy
+![alt text](https://github.com/rmwiesenberg/MQP/blob/master/robot/libs/Teensy/teensy35.png "BNO055 Hookup")
+
+A Teensy does not run much unlike and Arduino and can be programmed with either the [Arduino IDE](https://www.arduino.cc) or [PlatformIO](http://platformio.org) which is much easier and more robust not to mention it includes code completion and all the other functionality of the ArduinoIDE + its closer to C++ anyway. The Teensy pulls in the sensor data from the array of COZIR sensors and then sends it to the Pi to output elsewhere. Just use the USB cable to run it. Do not forget to run the line of code below or else it won't work with the Pi.
 ~~~~
 sudo wget -O /etc/udev/rules.d/49-teensy.rules "https://www.pjrc.com/teensy/49-teensy.rules"
 ~~~~
 ### breezycreate2
+This library is based upon https://github.com/simondlevy/BreezyCreate2 which is a simple Python API for interaction with the Create 2. That said it is NOT the same anymore, I have made a few edits to it that correct some errors with the two-compliment calculation as well as adding a few more fuctins useful to this project.
 ### pycreate
+This library is based upon https://github.com/mgobryan/pycreate which is a simple Python API for interaction with the Create 1. It might not be the same as the original but I honestly don't remember... Safe to just use this one? It definitely works correctly.
 ### TCP (custom_libs)
+Super simple catch all case for communication between connections based in Python. Takes in the message(whatever you want, arrays, matricies, doesn't matter), serializes it with Pickle, and then shoots it over the socket specified when you pass the function in. There is honestly not much to it, haven't had a problem yet.
 ### EKF (custom_libs)
+Please see the PDF in the folder for explination. Also you could just read the report? Uses NumPy which is the numerical module for python with matricies etc. good stuff.
