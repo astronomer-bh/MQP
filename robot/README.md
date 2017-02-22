@@ -50,7 +50,7 @@ The terminating 0 signifies the robot's ID number and can be changed if running 
 
 ## Libraries
 ### Adafruit_BNO055
-![alt text](https://github.com/rmwiesenberg/MQP/blob/master/robot/libs/Adafruit_BNO055/sensors_raspberry_pi_bb.png "BNO055 Hookup")
+![alt text](https://github.com/rmwiesenberg/MQP/blob/master/robot/libs/Adafruit_BNO055/IMU.png "BNO055 Hookup")
 ### Teensy
 ~~~~
 sudo wget -O /etc/udev/rules.d/49-teensy.rules "https://www.pjrc.com/teensy/49-teensy.rules"
