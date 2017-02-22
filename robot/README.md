@@ -56,7 +56,7 @@ The diagram above shows how to hook up the IMU to the RaspberryPi. Do not forget
 ### Teensy
 ![alt text](https://github.com/rmwiesenberg/MQP/blob/master/robot/libs/Teensy/teensy35.png "BNO055 Hookup")
 
-A Teensy does not run much unlike and Arduino and can be programmed with either the [Arduino IDE](https://www.arduino.cc) or [PlatformIO](http://platformio.org) which is much easier and more robust not to mention it includes code completion and all the other functionality of the ArduinoIDE + its closer to C++ anyway. The Teensy pulls in the sensor data from the array of COZIR sensors and then sends it to the Pi to output elsewhere. Just use the USB cable to run it. Do not forget to run the line of code below or else it won't work with the Pi.
+A Teensy does not run much unlike and Arduino and can be programmed with either the [Arduino IDE](https://www.arduino.cc) or [PlatformIO](http://platformio.org) which is much easier and more robust not to mention it includes code completion and all the other functionality of the ArduinoIDE + its closer to C++ anyway. The Teensy pulls in the sensor data from the array of COZIR sensors through the Serial Pins (TX/RXs) and then sends it to the Pi over USB to output elsewhere. Just use the USB cable to run and power it. Do not forget to run the line of code below or else it won't work with the Pi.
 ~~~~
 sudo wget -O /etc/udev/rules.d/49-teensy.rules "https://www.pjrc.com/teensy/49-teensy.rules"
 ~~~~
