@@ -21,7 +21,7 @@ All code in this repository was built to be run and debugged on Ubuntu (Debian L
 I'm not going to go too much in depth about how to install Ubuntu, other guides do it better than me. Grab the LTS version of [Ubuntu 16.04](http://releases.ubuntu.com/16.04/) if you are going to install on a Desktop. If you are looking for RasPi installations grab [Ubuntu Mate](https://ubuntu-mate.org/download) and then [Win32DiskImager](https://sourceforge.net/projects/win32diskimager/) for instalation. Works well and much easier than me explaning how to install it on an SD card in Linux. Not worth either of our times. For a good intro to Linux use [this guide](http://ryanstutorials.net/linuxtutorial) and for how to code please use [SoloLearn](https://www.sololearn.com) which is the best crash course guide out there code in a week.
 
 ### GitHub
-By now you are probably wondering, hey when do I get to actually run this code? Its now and gosh darn is it simple. Two more commands to install git and then get the repo.
+By now you are probably wondering, hey when do I get to actually run this code? Its now and gosh darn is it simple. Two more commands in terminal in Linux to install git and then get the repo.
 ~~~~
 sudo apt-get install git
 cd && git clone https://github.com/rmwiesenberg/MQP/
