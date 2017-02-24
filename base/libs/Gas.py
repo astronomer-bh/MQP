@@ -11,5 +11,11 @@ class Gas:
     def getPos(self):
         return [self.x, self.y]
 
+    def detX(self):
+        return self.x
+
+    def getY(self):
+        return self.y
+
     def getCon(self):
         return self.con

@@ -60,6 +60,7 @@ class Base:
             self.robotThreads[ID].start()
             self.robotThreads[ID].join()
 
+        #make sure to kill the threads!
         for ID in self.ID:
             self.robotThreads[ID].terminate()
 
@@ -70,4 +71,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--IP", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
 args = parser.parse_args()
 base = Base(args.ip)
-base.run()
+try:
+    base.run()
+except KeyboardInterrupt:
+    sys.exit()

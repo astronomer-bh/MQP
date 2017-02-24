@@ -49,7 +49,7 @@ class Robot:
 			self.curpos, self.curgas = encode.recievePacket(sock=self.conn)
 
 			if rcv == None:
-				keepRunning = False
+				self.keepRunning = False
 			#print x,y,theta,velocity
 			print(rcv)
 
@@ -64,15 +64,17 @@ class Robot:
             rcv = encode.recievePacket(sock=self.conn)
         	# Clean up the connection
         	print("Closing Connection")
-        	conn.close()
+        	self.conn.close()
 
+    #adds gas to list of gasses and to the map
     def addGas(self):
         i = 0
         for concentration in self.curgas:
             x = (self.curpos[0]+ARM_D*math.cos(self.curpos[2]+(90*i)))
             y = (self.curpos[1]+ARM_D*math.sin(self.curpos[2]+(90*i)))
-            self.gasses.append(Gas(x, y, concentration))
-            self.map.addGas(x,y,concentration)
+            gas = Gas.Gas(x, y, concentration)
+            self.gasses.append(gas)
+            self.map.addGas(gas)
             i++
 
     #determine highest of the gas concentrations
@@ -84,7 +86,7 @@ class Robot:
 
     #update robot drawing
     def draw(self):
-        self.map.updateRobot(curpos[0],curpos[1])
+        self.map.updateRobot(self)
         self.map.updateGas()
 
     #run comm once at first to get initial readings
@@ -97,7 +99,7 @@ class Robot:
             self.comm()
 
     def terminate(self):
-        keepRunning = False
+        self.keepRunning = False
 
 
 ###################
@@ -115,6 +117,12 @@ class Robot:
 
     def getCurPos(self):
         return self.curpos
+
+    def getX(self):
+        return self.x
+
+    def getY(self):
+        return self.y
 
     def getDesired(self):
         return self.desired

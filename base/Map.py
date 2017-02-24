@@ -18,6 +18,8 @@
 import sys
 from graphics import *
 
+import Gas
+
 class Map:
     def __init__(self, id,  sizeX=200, sizeY=200, scale=100):
         self.win = GraphWin(("Robot"+id), sizeX, sizeY)
@@ -34,37 +36,41 @@ class Map:
         self.centerX = sizeX/2
         self.centerY = sizeY/2
 
-    def addGas(self, x, y, con):
-        #don't forget camera axises are flippered
-        self.gasses.append() = [Circle(Point((centerX+(y/Map.SCALE)),
-                                    (centerY+(x/Map.SCALE))), 1),
-                                    con]
+    def addGas(self, gas):
+        #don't forget that the axis get rotated with the camera
+        self.gasses.append() = [Circle(Point((centerX+(gas.getY()/Map.SCALE)),
+                                    (centerY+(gas.getX()/Map.SCALE))), 1),
+                                    gas.getCon()]
 
+        #set min and max concentrations
         if con < self.minCon:
             self.minCon = con
         if con > self.maxCon:
             self.maxCon = con
 
+    #convert concentration value to color based on the min and max Cons
+    #its just linear interpolation
     def getColor(self, value):
-        # Figure out how 'wide' each range is
         spanCon = self.maxCon - self.minCon
 
-        # Convert the left range into a 0-1 range (float)
         valueScaled = float(value - self.minCon) / float(spanCon)
 
-        # Convert the 0-1 range into a value in the right range.
+        #return scaled value
         return 0 + (valueScaled * 255)
 
-    #takes distances in m
-    def updateRobot(self, x, y):
-        self.robot = Circle(Point((centerX+(y/Map.SCALE)),(centerY+(x/Map.SCALE))), 2)
+    #takes in a robot
+    #puts robot on the map
+    #we made it fam!
+    def updateRobot(self, robot):
+        self.robot = Circle(Point((centerX+(robot.getY()/Map.SCALE)),(centerY+(robot.getX()/Map.SCALE))), 2)
         self.robot.setFill("blue")
-        self.robot.draw(win)
+        self.robot.draw(self.win)
 
+    #updates gas colors and draws them
     def updateGas(self):
         for gas in gasses:
             val = self.getColor(gas[1])
             color = color_rgb(0,255-val,val)
             gas[0].setFill(color)
             gas[0].setOutline(color)
-            gas[0].draw()
+            gas[0].draw(self.win)

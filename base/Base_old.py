@@ -95,22 +95,22 @@ def comms():
 	print("Connection from", client_address)
 
 	while out == False:
-		try:
-			#recieve posn
-			rcv = encode.recievePacket(sock=conn)
+		#recieve posn
+		rcv = encode.recievePacket(sock=conn)
 
-			if rcv == None:
-				out == True
-			#print x,y,theta,velocity
-			print(rcv)
+		if rcv == None:
+			out == True
+		#print x,y,theta,velocity
+		print(rcv)
 
-			#send desired velocities
-			encode.sendPacket(sock=conn, message=desired)
-		except:
-			pass
+		#send desired velocities
+		encode.sendPacket(sock=conn, message=desired)
 
 	#send out packet
 	encode.sendPacket(sock=conn, message="out")
+
+	#wait for confirmation
+	rcv = encode.recievePacket(sock=conn)
 	# Clean up the connection
 	print("Closing Connection")
 	conn.close()
