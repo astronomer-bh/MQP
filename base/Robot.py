@@ -81,7 +81,7 @@ class Robot:
     #and change desired to that direction
     def findV(self):
         index = self.curgas.index(max(self.curgas))
-        self.desired = [SPEED*math.cos(90*index), SPEED*math.sin(90*index)]
+        self.desired = [SPEED*math.cos((90*index)+curpos[2]), SPEED*math.sin((90*index)+curpos[2])]
 
 
     #update robot drawing
