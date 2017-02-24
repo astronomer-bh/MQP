@@ -20,6 +20,7 @@ import socket
 import sys
 import pickle
 import threading
+from graphics import *
 
 sys.path.append('../libs/')
 from custom_libs import encoding_TCP as encode
@@ -38,18 +39,29 @@ class Base:
         self.sock.listen(1)
         print("Waiting for connections")
 
-        self.run()
+        #draw a pretty picture!
+        self.win = GraphWin()
+
+        #min and max concentrations
+        self.minCon = 1000000
+        self.maxCon = 0
 
     def run(self):
         #catch all robots
+        #all yur robots are belong to us
+        #make a thread for every robot communication
         while keepRunning:
             conn, client_address = self.sock.accept()
             print("Connection from", client_addess)
             ID = encode.recievePacket(sock=conn)
-            self.robots[ID] = threading.Thread(target=robot(ID, conn))
-            self.robots[ID].start()
-            self.robots[ID].join()
+            self.ID.append = ID
+            self.robots[ID] = Robot.Robot(ID,conn)
+            self.robotThreads[ID] = threading.Thread(target=robots[ID].run())
+            self.robotThreads[ID].start()
+            self.robotThreads[ID].join()
 
+        for ID in self.ID:
+            self.robotThreads[ID].terminate()
 
 #############################
 #Create Base Station and Run#
@@ -58,3 +70,4 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--IP", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
 args = parser.parse_args()
 base = Base(args.ip)
+base.run()

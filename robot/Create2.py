@@ -6,7 +6,7 @@
 #\_|   |_|\__,_|_| |_| |_|\___| \_|  |_/\_/\_\_|
 #
 #
-#robot.py
+#Create2.py
 #
 #Python interface for Plume MQP robot
 #
@@ -23,7 +23,8 @@ import serial
 import argparse
 import logging
 import sympy
-from sympy import symbols, Matrix
+
+import Robot
 
 sys.path.append('libs/')
 
@@ -86,20 +87,25 @@ class Robot:
 		#open connection to arduino
 		self.ardu = serial.Serial(Robot.ARDU_SERIAL_PORT, Robot.ARDU_BAUD_RATE)
 
-		# start IMU
-		self.initIMU()
+		# decide if only using encoders and which kalman filter
+		if mode != 'ENC':
+			self.mode = 'KF'
+			# start IMU
+			self.initIMU()
 
-		# Create Robot's Kalman filter
-		if mode == 'EKF':
-			# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
-			self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
-		elif mode == 'LKF':
-			P = sympy.Matrix([[3.16731500368425e-12, 0, 0, 0, 0],
-							[0, 3.16731500368425e-12, 0, 0, 0],
-							[0, 0, 0, 0, 0],
-							[0, 0, 0, 0, 0],
-							[0, 0, 0, 0, 4.77032958164422e-11]])
-			self.filter = LKF.RobotNavigationLKF(.00000006, .001, P=P)
+			# Create Robot's Kalman filter
+			if self.mode == 'EKF':
+				# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
+				self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
+			else:
+				P = sympy.Matrix([[3.16731500368425e-12, 0, 0, 0, 0],
+								[0, 3.16731500368425e-12, 0, 0, 0],
+								[0, 0, 0, 0, 0],
+								[0, 0, 0, 0, 0],
+								[0, 0, 0, 0, 4.77032958164422e-11]])
+				self.filter = LKF.RobotNavigationLKF(.00000006, .001, P=P)
+		else:
+			self.mode = 'ENC'
 
 		# Start TCP Connention
 		# ip:port
@@ -148,34 +154,39 @@ class Robot:
 		self.startt = time.time()
 
 		#calculate encoder bits (mm & rad)
-		deltadist = self.robot.getDistance()*.3048/100
+		deltadist = self.robot.getDistance()/1000
 		deltaang = self.robot.getAngle()*math.pi/180
 
-		#pull imu bits (m?)
-		gyro_x, gyro_y, gyro_z = self.bno.read_gyroscope()
-		accl_x, accl_y, accl_z = self.bno.read_accelerometer()
 
-		#send to EKF
-		z = Matrix([[accl_x-self.accl_x_offset],
-					[accl_y-self.accl_y_offset],
-					[accl_x-self.accl_x_offset],
-					[accl_y-self.accl_y_offset],
-					[gyro_z-self.gyro_z_offset]])
-		estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
+		if self.mode == 'KF':
+			#pull imu bits (m?)
+			gyro_x, gyro_y, gyro_z = self.bno.read_gyroscope()
+			accl_x, accl_y, accl_z = self.bno.read_accelerometer()
 
-		print(self.filter.P)
-		#update position bits
-		self.curpos[0] = estX[0]
-		self.curpos[1] = estX[1]
-		self.curpos[2] = math.fmod(estX[4], (2 * math.pi))
-		self.vel = math.sqrt(math.pow(estX[2], 2) + math.pow(estX[3], 2))
+			#send to EKF
+			z = Matrix([[accl_x-self.accl_x_offset],
+						[accl_y-self.accl_y_offset],
+						[accl_x-self.accl_x_offset],
+						[accl_y-self.accl_y_offset],
+						[gyro_z-self.gyro_z_offset]])
+			estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
+
+			print(self.filter.P)
+			#update position bits
+			self.curpos[0] = estX[0]
+			self.curpos[1] = estX[1]
+			self.curpos[2] = math.fmod(estX[4], (2 * math.pi))
+			self.vel = math.sqrt(math.pow(estX[2], 2) + math.pow(estX[3], 2))
+		else:
+			self.curpos[2] += deltaang
+			self.curpos[0] += deltadist*math.cos(deltaang)
+			self.curpos[1] += deltadist*math.cos(deltaang)
 
 		return
 
 	# grabs serial port data and splits across commas
 	def updateGas(self):
-		# self.gas = self.tnsy.readLine().strip().split(",")
-		self.gas = self.id
+		self.gas = self.tnsy.readLine().strip().split(",")
 
 
 	#########################
@@ -194,7 +205,7 @@ class Robot:
 		encode.sendPacket(sock=self.sock, message=self.id)
 
 	def loopComms(self):
-		snd = [self.id, self.curpos, self.gas]
+		snd = [self.curpos, self.gas]
 		#send curpos
 		encode.sendPacket(sock=self.sock, message=snd)
 
@@ -203,6 +214,7 @@ class Robot:
 
 		#determine what to do with message
 		if rcv == "out":
+			encode.sendPacket(sock=self.sock, message="out")
 			quit()
 		else:
 			self.desired[0] = rcv[0]
@@ -221,7 +233,7 @@ class Robot:
 		if(self.desired[0] == 0 and self.desired[1] == 0):
 			self.thetad = self.curpos[2]
 		elif(self.desired[0] == 0 and self.desired[1] > 0):
-			self.thetad = math.pi/2
+			self.thetad = math.pi/(2)
 		elif(self.desired[0] == 0 and self.desired[1] < 0):
 			self.thetad = math.pi/(-2)
 		elif(self.desired[0] > 0):
@@ -278,8 +290,8 @@ class Robot:
 
 	def main(self):
 		while self.keepRunning:
-			self.updatePosn()
 			self.updateGas()
+			self.updatePosn()
 			self.loopComms()
 			self.tCoord()
 			self.move()
@@ -295,9 +307,9 @@ class Robot:
 #Create and Run Robot on Pi#
 ############################
 parser = argparse.ArgumentParser()
-parser.add_argument("--ID", dest='id', type=int, help="assign ID to robot")
-parser.add_argument("--IP", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
-parser.add_argument("--MODE", dest='mode', type=str, help="LKF or EKF", default="LKF")
+parser.add_argument("--id", dest='id', type=int, help="assign ID to robot")
+parser.add_argument("--ip", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
+parser.add_argument("--mode", dest='mode', type=str, help="LKF, EKF, ENC", default="ENC")
 args = parser.parse_args()
 robot = Robot(args.id, args.ip, args.mode)
 robot.main()
