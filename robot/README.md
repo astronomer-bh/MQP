@@ -45,8 +45,11 @@ The terminating 0 signifies the robot's ID number and can be changed if running 
 
 ### Runtime Commands
 --id:   Sets the robot's ID for communicating with the base station properly
+
 Create2 only:
+
 --ip:   Sets the base station's IP. Default: 192.168.0.100
+
 --mode: Chose if using Linear (LKF) or Extended Kalman Filter (EKF) or just use encoders (ENC). Default: ENC
 
 ## Walkthrough
