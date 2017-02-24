@@ -22,8 +22,8 @@ sys.path.append('libs/')
 from libs.graphics import *
 
 class Map:
-    MINCON = 600
-    MAXCON = 1600
+    MINCON = 0
+    MAXCON = 2000
     ROBOT = .35
     def __init__(self, id,  sizeX=600, sizeY=600, scale=100):
         self.win = GraphWin(("Robot"), sizeX, sizeY)
@@ -38,33 +38,30 @@ class Map:
 
         self.gasses = []
 
+        self.robot = Circle(Point(self.sizeX*2, self.sizeY*2), int(Map.ROBOT*self.scale/2))
+
         return
 
     def addGas(self, gas):
         #don't forget that the axis get rotated with the camera
         con = gas.getCon()
-        newgas = [Circle(Point((self.centerX+(gas.getY()*self.scale)),
+        newgas = [Circle(Point((self.centerX-(gas.getY()*self.scale)),
                                     (self.centerY-(gas.getX()*self.scale))), 1),
                                     con]
         self.gasses.append(newgas)
         newgas[0].draw(self.win)
-
-        #set min and max concentrations
-        if con < self.minCon:
-            self.minCon = con
-        if con > self.maxCon:
-            self.maxCon = con
-
-        self.robot = Circle(Point(self.sizeX*2, self.sizeY*2),
-                            int(Map.ROBOT*self.scale))
+        val = self.getColor(newgas[1])
+        color = color_rgb(int(val),int(255-val),int(0))
+        newgas[0].setFill(color)
+        newgas[0].setOutline(color)
         return
 
     #convert concentration value to color based on the min and max Cons
     #its just linear interpolation
     def getColor(self, value):
-        spanCon = Map.maxCon - Map.minCon
+        spanCon = Map.MAXCON - Map.MINCON
 
-        valueScaled = float(value - Map.minCon) / float(spanCon)
+        valueScaled = float(value - Map.MINCON) / float(spanCon)
 
         #return scaled value
         return 0 + (valueScaled * 255)
@@ -74,9 +71,9 @@ class Map:
     #we made it fam!
     def updateRobot(self, robot):
         self.robot.undraw()
-        self.robot = Circle(Point((self.centerX+(robot.getY()*self.scale)),
+        self.robot = Circle(Point((self.centerX-(robot.getY()*self.scale)),
                                     (self.centerY-(robot.getX()*self.scale))),
-                                    int(Map.ROBOT*self.scale))
+                                    int(Map.ROBOT*self.scale/2))
         self.robot.setFill("white")
         self.robot.draw(self.win)
         return
