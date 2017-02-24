@@ -1,4 +1,4 @@
 #include "Arduino.h"
+void request();
 void readSensors();
-String convertSensor(String input);
 void blinkLED();

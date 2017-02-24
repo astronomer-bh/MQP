@@ -11,7 +11,7 @@ class Gas:
     def getPos(self):
         return [self.x, self.y]
 
-    def detX(self):
+    def getX(self):
         return self.x
 
     def getY(self):

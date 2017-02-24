@@ -18,14 +18,37 @@ void setup(){
   blinkLED();
   delay(1000);
 
+  //set to polling mode
+  Serial2.print("K 2\r\n");
+  Serial3.print("K 2\r\n");
+  Serial4.print("K 2\r\n");
+  Serial5.print("K 2\r\n");
+
+  //clear all buffers
+  while(Serial2.read() != '\n'){};
+  while(Serial3.read() != '\n'){};
+  while(Serial4.read() != '\n'){};
+  while(Serial5.read() != '\n'){};
 }
 
 void loop(){
-  readSensors();
+  // check if newline is sent from create
+  // if sent then ask sensors for data
+  if (Serial.read() == '\n'){
+    request();
+    readSensors();
+  }
+}
+
+void request(){
+  Serial2.print("Z\r\n");
+  Serial3.print("Z\r\n");
+  Serial4.print("Z\r\n");
+  Serial5.print("Z\r\n");
 }
 
 void readSensors(){
-  String val = ""; //holds the string of the value
+  String val = ""; // holds the string of the value
   char inChar = 'p';
 
   do{
@@ -66,7 +89,8 @@ void readSensors(){
     }
   } while (inChar != '\n');
 
-  Serial.println(val);
+  Serial.print(val);
+  Serial.print('\n');
   blinkLED();
 }
 

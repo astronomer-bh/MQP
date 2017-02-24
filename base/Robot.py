@@ -19,17 +19,19 @@ import socket
 import sys
 import pickle
 import threading
+import math
 
 import Gas
+import Map
 
-sys.path.append('../libs/')
-from custom_libs import encoding_TCP as encode
+sys.path.append('libs/')
+from libs.custom_libs import encoding_TCP as encode
 
 class Robot:
     #max robot speed
     SPEED = 15
     #arm length
-    ARM_D = .5
+    ARM_D = .25
 
     def __init__(self, id, conn):
         self.id = id
@@ -39,61 +41,64 @@ class Robot:
         self.curpos = [0, 0, 0]
         self.desired = [0, 0]
 
+        self.curgas = []
+        self.gasses = []
+
         self.conn = conn
 
         self.map = Map.Map(id)
 
     def comm(self):
-        if keepRunning:
-			#recieve posn
-			self.curpos, self.curgas = encode.recievePacket(sock=self.conn)
+        if self.keepRunning:
+            #recieve posn
+            self.curpos, self.curgas = encode.recievePacket(sock=self.conn)
 
-			if rcv == None:
-				self.keepRunning = False
-			#print x,y,theta,velocity
-			print(rcv)
+            #print x,y,theta,velocity
+            print(self.curpos)
+            print(self.curgas)
+            self.addGas()
 
-            self.addGas(gas)
-
-			#send desired velocities
-			encode.sendPacket(sock=self.conn, message=self.desired)
+            #send desired velocities
+            encode.sendPacket(sock=self.conn, message=self.desired)
         else:
-        	#send out packet
-        	encode.sendPacket(sock=self.conn, message="out")
+            #send out packet
+            encode.sendPacket(sock=self.conn, message="out")
             #wait for confirmation of reception
             rcv = encode.recievePacket(sock=self.conn)
-        	# Clean up the connection
-        	print("Closing Connection")
-        	self.conn.close()
+            # Clean up the connection
+            print("Closing Connection")
+            self.conn.close()
 
     #adds gas to list of gasses and to the map
     def addGas(self):
         i = 0
         for concentration in self.curgas:
-            x = (self.curpos[0]+ARM_D*math.cos(self.curpos[2]+(90*i)))
-            y = (self.curpos[1]+ARM_D*math.sin(self.curpos[2]+(90*i)))
+            x = (self.curpos[0]+Robot.ARM_D*math.cos(self.curpos[2]+((math.pi/2)*i)))
+            y = (self.curpos[1]+Robot.ARM_D*math.sin(self.curpos[2]+((math.pi/2)*i)))
             gas = Gas.Gas(x, y, concentration)
             self.gasses.append(gas)
             self.map.addGas(gas)
-            i++
+            i = i+1
 
     #determine highest of the gas concentrations
     #and change desired to that direction
     def findV(self):
         index = self.curgas.index(max(self.curgas))
-        self.desired = [SPEED*math.cos((90*index)+curpos[2]), SPEED*math.sin((90*index)+curpos[2])]
+        print(index)
+        self.desired = [Robot.SPEED*math.cos(((math.pi/2)*index)+self.curpos[2]),
+                        Robot.SPEED*math.sin(((math.pi/2)*index)+self.curpos[2])]
 
 
     #update robot drawing
     def draw(self):
         self.map.updateRobot(self)
-        self.map.updateGas()
+        # self.map.updateGas()
 
     #run comm once at first to get initial readings
     #then have it last so the exit call doesn't mess up the other funcs
     def run(self):
         self.comm()
-        while keepRunning:
+        while self.keepRunning:
             self.findV()
             self.draw()
             self.comm()
@@ -119,10 +124,10 @@ class Robot:
         return self.curpos
 
     def getX(self):
-        return self.x
+        return self.curpos[0]
 
     def getY(self):
-        return self.y
+        return self.curpos[1]
 
     def getDesired(self):
         return self.desired

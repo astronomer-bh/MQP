@@ -16,17 +16,17 @@
 #Stepthen Harnais
 
 import sys
-from graphics import *
-
 import Gas
 
-class Map:
-    def __init__(self, id,  sizeX=200, sizeY=200, scale=100):
-        self.win = GraphWin(("Robot"+id), sizeX, sizeY)
-        self.win.yUp()
+sys.path.append('libs/')
+from libs.graphics import *
 
-        self.minCon = 1000000
-        self.maxCon = 0
+class Map:
+    MINCON = 600
+    MAXCON = 1600
+    ROBOT = .35
+    def __init__(self, id,  sizeX=600, sizeY=600, scale=100):
+        self.win = GraphWin(("Robot"), sizeX, sizeY)
 
         self.scale = scale
 
@@ -36,11 +36,18 @@ class Map:
         self.centerX = sizeX/2
         self.centerY = sizeY/2
 
+        self.gasses = []
+
+        return
+
     def addGas(self, gas):
         #don't forget that the axis get rotated with the camera
-        self.gasses.append() = [Circle(Point((centerX+(gas.getY()/Map.SCALE)),
-                                    (centerY+(gas.getX()/Map.SCALE))), 1),
-                                    gas.getCon()]
+        con = gas.getCon()
+        newgas = [Circle(Point((self.centerX+(gas.getY()*self.scale)),
+                                    (self.centerY-(gas.getX()*self.scale))), 1),
+                                    con]
+        self.gasses.append(newgas)
+        newgas[0].draw(self.win)
 
         #set min and max concentrations
         if con < self.minCon:
@@ -48,12 +55,16 @@ class Map:
         if con > self.maxCon:
             self.maxCon = con
 
+        self.robot = Circle(Point(self.sizeX*2, self.sizeY*2),
+                            int(Map.ROBOT*self.scale))
+        return
+
     #convert concentration value to color based on the min and max Cons
     #its just linear interpolation
     def getColor(self, value):
-        spanCon = self.maxCon - self.minCon
+        spanCon = Map.maxCon - Map.minCon
 
-        valueScaled = float(value - self.minCon) / float(spanCon)
+        valueScaled = float(value - Map.minCon) / float(spanCon)
 
         #return scaled value
         return 0 + (valueScaled * 255)
@@ -62,15 +73,20 @@ class Map:
     #puts robot on the map
     #we made it fam!
     def updateRobot(self, robot):
-        self.robot = Circle(Point((centerX+(robot.getY()/Map.SCALE)),(centerY+(robot.getX()/Map.SCALE))), 2)
-        self.robot.setFill("blue")
+        self.robot.undraw()
+        self.robot = Circle(Point((self.centerX+(robot.getY()*self.scale)),
+                                    (self.centerY-(robot.getX()*self.scale))),
+                                    int(Map.ROBOT*self.scale))
+        self.robot.setFill("white")
         self.robot.draw(self.win)
+        return
 
     #updates gas colors and draws them
     def updateGas(self):
-        for gas in gasses:
+        for gas in self.gasses:
             val = self.getColor(gas[1])
-            color = color_rgb(0,255-val,val)
+            color = color_rgb(int(val),int(255-val),int(0))
             gas[0].setFill(color)
             gas[0].setOutline(color)
-            gas[0].draw(self.win)
+            self.win.update()
+        return

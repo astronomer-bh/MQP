@@ -20,18 +20,22 @@ import socket
 import sys
 import pickle
 import threading
-from graphics import *
+import argparse
 
-sys.path.append('../libs/')
-from custom_libs import encoding_TCP as encode
+import Robot
+
+sys.path.append('libs/')
+from libs.graphics import *
+from libs.custom_libs import encoding_TCP as encode
 
 class Base:
     def __init__(self, ip):
         self.keepRunning = True
 
         #setup TCP server and listeing
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         PORT = 5732
-        server_address = (IP, PORT)
+        server_address = (ip, PORT)
         print("starting up on %s port %s" %server_address)
         self.sock.bind(server_address)
 
@@ -39,30 +43,33 @@ class Base:
         self.sock.listen(1)
         print("Waiting for connections")
 
-        #draw a pretty picture!
-        self.win = GraphWin()
-
         #min and max concentrations
         self.minCon = 1000000
         self.maxCon = 0
+
+        self.robots = []
+        self.robotThreads = []
 
     def run(self):
         #catch all robots
         #all yur robots are belong to us
         #make a thread for every robot communication
-        while keepRunning:
+        while self.keepRunning:
             conn, client_address = self.sock.accept()
-            print("Connection from", client_addess)
+            print("Connection from", client_address)
             ID = encode.recievePacket(sock=conn)
-            self.ID.append = ID
-            self.robots[ID] = Robot.Robot(ID,conn)
-            self.robotThreads[ID] = threading.Thread(target=robots[ID].run())
-            self.robotThreads[ID].start()
-            self.robotThreads[ID].join()
+
+            robot = Robot.Robot(ID,conn)
+            thread = threading.Thread(target=robot.run())
+            thread.start()
+            thread.join()
+
+            self.robotThreads.append(thread)
+            self.robots.append(robot)
 
         #make sure to kill the threads!
-        for ID in self.ID:
-            self.robotThreads[ID].terminate()
+        for thread in self.robotThreads:
+            thread.terminate()
 
 #############################
 #Create Base Station and Run#

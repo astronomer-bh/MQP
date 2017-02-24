@@ -24,8 +24,6 @@ import argparse
 import logging
 import sympy
 
-import Robot
-
 sys.path.append('libs/')
 
 from libs.custom_libs import encoding_TCP as encode
@@ -40,22 +38,22 @@ class Robot:
 	MAX_SPEED = 50
 	MIN_SPEED = -50
 	DRIVE_SPEED = 20
-	TURN_SPEED = 20
+	TURN_SPEED = 15
 	STOP = 0
 
 	ANGMARG = .05
 
 	#robot initialization
-	ROBOT_SERIAL_PORT = "/dev/ttyUSB1"
+	ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
 
 	#imu initialization
-	IMU_SERIAL_PORT = "/dev/ttyUSB0"
+	IMU_SERIAL_PORT = "/dev/ttyUSB1"
 	IMU_GPIO_PIN = 18
 
 	#arduino initialization
 	#TODO: Is this real? Sorrect port? Might conflict with robot
-	ARDU_SERIAL_PORT = '/dev/ttyACM0'
-	ARDU_BAUD_RATE = 9600
+	TNSY_SERIAL_PORT = "/dev/ttyACM0"
+	TNSY_BAUD_RATE = 9600
 
 
 	def __init__(self, id, ip, mode):
@@ -82,10 +80,10 @@ class Robot:
 		#connect robot
 		#TODO: start in full mode. not working correctly as is
 		self.robot = iRobot(Robot.ROBOT_SERIAL_PORT)
-		self.robot.playNote('A4', 10) #say hi!
+		self.robot.playNote('A4', 20) #say hi!
 
-		#open connection to arduino
-		self.ardu = serial.Serial(Robot.ARDU_SERIAL_PORT, Robot.ARDU_BAUD_RATE)
+		#open connection to teensy
+		self.tnsy = serial.Serial(Robot.TNSY_SERIAL_PORT, Robot.TNSY_BAUD_RATE)
 
 		# decide if only using encoders and which kalman filter
 		if mode != 'ENC':
@@ -94,7 +92,7 @@ class Robot:
 			self.initIMU()
 
 			# Create Robot's Kalman filter
-			if self.mode == 'EKF':
+			if mode == 'EKF':
 				# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
 				self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
 			else:
@@ -143,11 +141,8 @@ class Robot:
 		return
 
 
-	#update sensors
+	#update loacization sensors
 	def updatePosn(self):
-		deltadist = 0
-		deltaang = 0
-
 		#update time change
 		self.endt = time.time()
 		deltat = self.endt - self.startt
@@ -157,7 +152,8 @@ class Robot:
 		deltadist = self.robot.getDistance()/1000
 		deltaang = self.robot.getAngle()*math.pi/180
 
-
+		# if in kalman filter mode, then use imu
+		# otherwise trash it cause imu is definitely not great
 		if self.mode == 'KF':
 			#pull imu bits (m?)
 			gyro_x, gyro_y, gyro_z = self.bno.read_gyroscope()
@@ -179,14 +175,22 @@ class Robot:
 			self.vel = math.sqrt(math.pow(estX[2], 2) + math.pow(estX[3], 2))
 		else:
 			self.curpos[2] += deltaang
-			self.curpos[0] += deltadist*math.cos(deltaang)
-			self.curpos[1] += deltadist*math.cos(deltaang)
+			self.curpos[2] = math.fmod(self.curpos[2], (2 * math.pi))
+			self.curpos[0] += deltadist*math.cos(self.curpos[2])
+			self.curpos[1] += deltadist*math.sin(self.curpos[2])
 
+		return
+
+	#tell teensy to grab gas info
+	def requestGas(self):
+		self.tnsy.write('\n'.encode('utf-8'))
 		return
 
 	# grabs serial port data and splits across commas
 	def updateGas(self):
-		self.gas = self.tnsy.readLine().strip().split(",")
+		line = self.tnsy.readline().decode("utf-8")
+		self.gas = list(map(int, line.split(",")))
+		return
 
 
 	#########################
@@ -204,6 +208,8 @@ class Robot:
 		#send robot id so the base knows who is connecting
 		encode.sendPacket(sock=self.sock, message=self.id)
 
+		return
+
 	def loopComms(self):
 		snd = [self.curpos, self.gas]
 		#send curpos
@@ -211,6 +217,7 @@ class Robot:
 
 		#recieve message
 		rcv = encode.recievePacket(sock=self.sock)
+		print(rcv)
 
 		#determine what to do with message
 		if rcv == "out":
@@ -220,10 +227,14 @@ class Robot:
 			self.desired[0] = rcv[0]
 			self.desired[1] = rcv[1]
 
+		return
+
 	def terminateComms(self):
 		#close socket
 		print("Closing Socket")
 		self.sock.close()
+
+		return
 
 
 	#change input velocities to v and theta
@@ -256,9 +267,9 @@ class Robot:
 		if((self.curpos[2] <= upper) and (self.curpos[2] >= lower)):
 			self.drive()
 			return True
-		elif(self.curpos[2] < lower):
-			self.turnCCW()
 		elif(self.curpos[2] > upper):
+			self.turnCCW()
+		elif(self.curpos[2] < lower):
 			self.turnCW()
 		return False
 
@@ -269,38 +280,43 @@ class Robot:
 
 	#turn Counter Clockwise
 	def turnCCW(self):
-		self.robot.setTurnSpeed(-Robot.TURN_SPEED)
+		self.robot.setTurnSpeed(Robot.TURN_SPEED)
 		return
 
 	#turn Clockwise
 	def turnCW(self):
-		self.robot.setTurnSpeed(Robot.TURN_SPEED)
+		self.robot.setTurnSpeed(-Robot.TURN_SPEED)
 		return
 
 	#end robot
 	def quit(self):
 		self.keepRunning = False
 		self.robot.goHome()
+		return
 
 
 	###############
 	#Main Function#
 	###############
 	#where the buisness happens
-
+	#ask for gasses so they can be grabbed while position is getting updated
+	#best chance to get loaction accurate to position
 	def main(self):
 		while self.keepRunning:
-			self.updateGas()
+			self.requestGas()
 			self.updatePosn()
+			self.updateGas()
 			self.loopComms()
 			self.tCoord()
 			self.move()
-			if self.veld == 0:
+			if self.veld == 0 and self.mode == 'KF':
 				self.zeroIMU()
 		self.terminate()
+		return
 
 	def terminate(self):
 		self.terminateComms()
+		return
 
 
 ############################
