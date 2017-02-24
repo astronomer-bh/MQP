@@ -23,7 +23,7 @@ import threading
 import socket
 import pickle
 
-sys.path.append('../libs/')
+sys.path.append('libs/')
 from custom_libs import encoding_TCP as encode
 from breezycreate2 import iRobot
 

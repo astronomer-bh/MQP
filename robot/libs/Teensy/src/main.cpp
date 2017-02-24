@@ -4,9 +4,8 @@
 #define LEDPIN 13
 
 void setup(){
-  pinMode(LEDPIN, OUTPUT);
-
   delay(4000);
+  pinMode(LEDPIN, OUTPUT);
   Serial.begin(9600);
   blinkLED();
   Serial2.begin(9600);
@@ -17,65 +16,63 @@ void setup(){
   blinkLED();
   Serial5.begin(9600);
   blinkLED();
+  delay(1000);
+
 }
 
 void loop(){
-  if(Serial2.available()&&Serial3.available()
-    &&Serial4.available()&&Serial5.available()) readSensors();
+  readSensors();
 }
 
 void readSensors(){
   String val = ""; //holds the string of the value
-  while (Serial2.available()){
-    char inChar = (char)(Serial2.read());
-    if (inChar == 'z') {
-      blinkLED();
-      val += ",";
-      do{}while(Serial2.read() != '\n'); // clear remaining buffer
-    } else if (inChar != 'Z'&&inChar != ' '){
-      val += inChar;
-    }
-  }
+  char inChar = 'p';
 
-  while (Serial3.available()){
-    char inChar = (char)(Serial3.read());
-    if (inChar == 'z') {
-      blinkLED();
-      val += ",";
-      do{}while(Serial3.read() != '\n'); // clear remaining buffer
-    } else if (inChar != 'Z'&&inChar != ' '){
+  do{
+    while(!Serial2.available()){}
+    inChar = (char)Serial2.read();
+    if(inChar != '\r' && inChar != 'Z' && inChar != ' ' && inChar != '\n'){
       val += inChar;
     }
-  }
+  } while (inChar != '\n');
+  val += ",";
+  inChar = 'p';
 
-  while (Serial4.available()){
-    char inChar = (char)(Serial4.read());
-    if (inChar == 'z') {
-      blinkLED();
-      val += ",";
-      do{}while(Serial4.read() != '\n'); // clear remaining buffer
-    } else if (inChar != 'Z'&&inChar != ' '){
+  do{
+    while(!Serial3.available()){}
+    inChar = (char)Serial3.read();
+    if(inChar != '\r' && inChar != 'Z' && inChar != ' ' && inChar != '\n'){
       val += inChar;
     }
-  }
+  } while (inChar != '\n');
+  val += ",";
+  inChar = 'p';
 
-  while (Serial5.available()){
-    char inChar = (char)(Serial5.read());
-    if (inChar == 'z') {
-      blinkLED();
-      val += ",";
-      do{}while(Serial5.read() != '\n'); // clear remaining buffer
-    } else if (inChar != 'Z'&&inChar != ' '){
+  do{
+    while(!Serial4.available()){}
+    inChar = (char)Serial4.read();
+    if(inChar != '\r' && inChar != 'Z' && inChar != ' ' && inChar != '\n'){
       val += inChar;
     }
-  }
+  } while (inChar != '\n');
+  val += ",";
+  inChar = 'p';
+
+  do{
+    while(!Serial5.available()){}
+    inChar = (char)Serial5.read();
+    if(inChar != '\r' && inChar != 'Z' && inChar != ' ' && inChar != '\n'){
+      val += inChar;
+    }
+  } while (inChar != '\n');
 
   Serial.println(val);
+  blinkLED();
 }
 
 void blinkLED(){
   digitalWrite(LEDPIN, HIGH);
-  delay(50);
+  delay(100);
   digitalWrite(LEDPIN, LOW);
   delay(100);
 }

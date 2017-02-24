@@ -6,9 +6,11 @@
 #\_|   |_|\__,_|_| |_| |_|\___| \_|  |_/\_/\_\_|
 #
 #
-#server.py
+#Base_old.py
 #
 #Python interface for Plume MQP robot
+#Threading for kb...
+#I don't like it but it works
 #
 #Ryan Wiesenberg
 #Eric Fast
@@ -19,7 +21,6 @@ import sys
 import pickle
 import threading
 import numpy as np
-import cv2
 
 sys.path.append('libs/')
 from custom_libs import encoding_TCP as encode

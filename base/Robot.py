@@ -1,3 +1,20 @@
+#______ _                       ___  ______________
+#| ___ \ |                      |  \/  |  _  | ___ \
+#| |_/ / |_   _ _ __ ___   ___  | .  . | | | | |_/ /
+#|  __/| | | | | '_ ` _ \ / _ \ | |\/| | | | |  __/
+#| |   | | |_| | | | | | |  __/ | |  | \ \/' / |
+#\_|   |_|\__,_|_| |_| |_|\___| \_|  |_/\_/\_\_|
+#
+#
+#Robot.py
+#
+#Objectively Delicious!
+#
+#Ryan Wiesenberg
+#Eric Fast
+#Stepthen Harnais
+
+
 import socket
 import sys
 import pickle
@@ -6,33 +23,39 @@ import threading
 sys.path.append('../libs/')
 from custom_libs import encoding_TCP as encode
 
-#driving constants
-#cm/s (probably. taken from create.py)
-MAX_SPEED = 50
-MIN_SPEED = -50
-DRIVE_SPEED = 20
-TURN_SPEED = 5
-STOP = 0
-
 class Robot:
-    def __init__(self, id):
-        self._id = id
+    def __init__(self, id, conn):
+        self.id = id
+        self.keepRunning = True
 
         #position initialization
-        self._curpos = [0, 0, 0]
-        self._desired = [0, 0]
+        self.curpos = [0, 0, 0]
+        self.desired = [0, 0]
+
+        self.conn = conn
+
+        self.run()
+
+    def run(self):
+        self.comm()
+        self.findV()
+
+
+###################
+#Getters & Setters#
+###################
 
     def setCurPos(self, x, y, theta):
-        self._curpos = [x, y, theta]
+        self.curpos = [x, y, theta]
 
     def setDesired(self, x_dot, y_dot):
-        self._desired = [x_dot, y_dot]
+        self.desired = [x_dot, y_dot]
 
     def getID(self):
-        return self._id
+        return self.id
 
     def getCurPos(self):
-        return self._curpos
+        return self.curpos
 
     def getDesired(self):
-        return self._desired
+        return self.desired

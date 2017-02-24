@@ -29,6 +29,7 @@ sys.path.append('libs/')
 
 from libs.custom_libs import encoding_TCP as encode
 from libs.custom_libs import NaviEKF as EKF
+from libs.custom_libs import NaviLKF as LKF
 from libs.breezycreate2 import iRobot
 from libs.Adafruit_BNO055 import BNO055
 
@@ -40,6 +41,8 @@ class Robot:
 	DRIVE_SPEED = 20
 	TURN_SPEED = 20
 	STOP = 0
+
+	ANGMARG = .05
 
 	#robot initialization
 	ROBOT_SERIAL_PORT = "/dev/ttyUSB1"
@@ -54,7 +57,7 @@ class Robot:
 	ARDU_BAUD_RATE = 9600
 
 
-	def __init__(self, id, ip):
+	def __init__(self, id, ip, mode):
 		self.id = id
 
 		#position initalization
@@ -87,8 +90,16 @@ class Robot:
 		self.initIMU()
 
 		# Create Robot's Kalman filter
-		# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
-		self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
+		if mode == 'EKF':
+			# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
+			self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
+		elif mode == 'LKF':
+			P = sympy.Matrix([[3.16731500368425e-12, 0, 0, 0, 0],
+							[0, 3.16731500368425e-12, 0, 0, 0],
+							[0, 0, 0, 0, 0],
+							[0, 0, 0, 0, 0],
+							[0, 0, 0, 0, 4.77032958164422e-11]])
+			self.filter = LKF.RobotNavigationLKF(.00000006, .001, P=P)
 
 		# Start TCP Connention
 		# ip:port
@@ -137,7 +148,7 @@ class Robot:
 		self.startt = time.time()
 
 		#calculate encoder bits (mm & rad)
-		deltadist = self.robot.getDistance()/1000
+		deltadist = self.robot.getDistance()*.3048/100
 		deltaang = self.robot.getAngle()*math.pi/180
 
 		#pull imu bits (m?)
@@ -149,10 +160,10 @@ class Robot:
 					[accl_y-self.accl_y_offset],
 					[accl_x-self.accl_x_offset],
 					[accl_y-self.accl_y_offset],
-					[(gyro_z-self.gyro_z_offset)*math.pi/180]])
+					[gyro_z-self.gyro_z_offset]])
 		estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
 
-		print(estX)
+		print(self.filter.P)
 		#update position bits
 		self.curpos[0] = estX[0]
 		self.curpos[1] = estX[1]
@@ -163,7 +174,8 @@ class Robot:
 
 	# grabs serial port data and splits across commas
 	def updateGas(self):
-		self.gas = self.tnsy.readLine().strip().split(",")
+		# self.gas = self.tnsy.readLine().strip().split(",")
+		self.gas = self.id
 
 
 	#########################
@@ -174,9 +186,9 @@ class Robot:
 		# Connect the socket to the port where the server is listening
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		print("connecting to %s port %s" %(ip, port))
-		self.sock.connect(ip, port)
+		self.sock.connect((ip, port))
 
-		time.sleep(Robot.COMMS_DELAY)
+		time.sleep(.5)
 
 		#send robot id so the base knows who is connecting
 		encode.sendPacket(sock=self.sock, message=self.id)
@@ -285,6 +297,7 @@ class Robot:
 parser = argparse.ArgumentParser()
 parser.add_argument("--ID", dest='id', type=int, help="assign ID to robot")
 parser.add_argument("--IP", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
+parser.add_argument("--MODE", dest='mode', type=str, help="LKF or EKF", default="LKF")
 args = parser.parse_args()
-robot = Robot(args.id, args.ip)
+robot = Robot(args.id, args.ip, args.mode)
 robot.main()
