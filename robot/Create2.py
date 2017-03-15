@@ -261,19 +261,6 @@ class Robot:
 	#movement control
 	#decide turn or straight
 	def move(self):
-		# upper = self.thetad + Robot.ANGMARG
-		# lower = self.thetad - Robot.ANGMARG
-		#
-		#
-		# if((self.curpos[2] <= upper) and (self.curpos[2] >= lower)):
-		# 	self.drive()
-		# 	return True
-		# elif(self.curpos[2] > upper):
-		# 	self.turnCCW()
-		# elif(self.curpos[2] < lower):
-		# 	self.turnCW()
-		# return False
-
 		diff = math.tan((self.thetad-self.curpos[2])/2)
 		if(diff < -Robot.ANGMARG):
 			self.turnCCW()
