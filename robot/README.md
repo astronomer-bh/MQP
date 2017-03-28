@@ -39,7 +39,7 @@ In this directory there are two essential python codes, Create1 and Create2. Cre
 
 Before running Create2.py, the base station's code should already be running, otherwise the robot will spit back a connection error associated with not seeing the base. See the base directory for those instructions. To run the code on the Create2 simply run the following line of code in this directory:
 ~~~~
-python3 Create2.py 0
+python3 Create2.py --id 0
 ~~~~
 The terminating 0 signifies the robot's ID number and can be changed if running multiple robots simultaneously. This ID should be set to match the ID of the AprilTag on the robot as to not confuse the future potential quadcopter. This code will report back the current desired velocities and send to the base station the robot's ID, current position, orientation, and sensor data.
 

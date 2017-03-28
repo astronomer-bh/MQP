@@ -68,7 +68,7 @@ class Base:
             self.robots.append(robot)
 
         #make sure to kill the threads!
-        for thread in self.robotThreads:
+        for thread in self.robots:
             thread.terminate()
 
     def terminate(self):
