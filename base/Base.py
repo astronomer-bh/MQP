@@ -71,6 +71,9 @@ class Base:
         for thread in self.robotThreads:
             thread.terminate()
 
+    def terminate(self):
+        self.keepRunning = False
+
 #############################
 #Create Base Station and Run#
 #############################
@@ -81,4 +84,5 @@ base = Base(args.ip)
 try:
     base.run()
 except KeyboardInterrupt:
+    base.terminate()
     sys.exit()

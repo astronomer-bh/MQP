@@ -23,6 +23,7 @@ import serial
 import argparse
 import logging
 import sympy
+import numpy as np
 
 sys.path.append('libs/')
 
@@ -84,6 +85,9 @@ class Robot:
 
 		#open connection to teensy
 		self.tnsy = serial.Serial(Robot.TNSY_SERIAL_PORT, Robot.TNSY_BAUD_RATE)
+
+		#calibrate the COZIR sensors
+		self.calibrate()
 
 		# decide if only using encoders and which kalman filter
 		if mode != 'ENC':
@@ -181,6 +185,26 @@ class Robot:
 
 		return
 
+	#COZIR calibration
+	def calibrate(self):
+		self.turnCCW()
+		start = time.time()
+		curtime = start
+		measurements = 0
+		gasses = [0,0,0,0]
+		self.gas_offset = [0,0,0,0]
+		while (curtime < start + 60):
+			self.requestGas()
+			self.updateGas()
+			gasses = list(np.array(self.gas) + np.array(gasses))
+			measurements += 1
+			curtime = time.time()
+		gas_norm = list(np.array(gasses)/measurements)
+		gas_avg = sum(gas_norm)/4
+		self.gas_offset[:] = [x - gas_avg for x in gas_norm]
+		return
+
+
 	#tell teensy to grab gas info
 	def requestGas(self):
 		self.tnsy.write('\n'.encode('utf-8'))
@@ -189,7 +213,8 @@ class Robot:
 	# grabs serial port data and splits across commas
 	def updateGas(self):
 		line = self.tnsy.readline().decode("utf-8")
-		self.gas = list(map(int, line.split(",")))
+		gas = list(map(int, line.split(",")))
+		self.gas = list(np.array(gas) - np.array(self.gas_offset))
 		return
 
 
@@ -261,24 +286,11 @@ class Robot:
 	#movement control
 	#decide turn or straight
 	def move(self):
-		# upper = self.thetad + Robot.ANGMARG
-		# lower = self.thetad - Robot.ANGMARG
-		#
-		#
-		# if((self.curpos[2] <= upper) and (self.curpos[2] >= lower)):
-		# 	self.drive()
-		# 	return True
-		# elif(self.curpos[2] > upper):
-		# 	self.turnCCW()
-		# elif(self.curpos[2] < lower):
-		# 	self.turnCW()
-		# return False
-
 		diff = math.tan((self.thetad-self.curpos[2])/2)
 		if(diff < -Robot.ANGMARG):
-			self.turnCCW()
-		elif(diff > Robot.ANGMARG):
 			self.turnCW()
+		elif(diff > Robot.ANGMARG):
+			self.turnCCW()
 		else:
 			self.drive()
 			return True
@@ -291,12 +303,12 @@ class Robot:
 
 	#turn Counter Clockwise
 	def turnCCW(self):
-		self.robot.setTurnSpeed(Robot.TURN_SPEED)
+		self.robot.setTurnSpeed(-Robot.TURN_SPEED)
 		return
 
 	#turn Clockwise
 	def turnCW(self):
-		self.robot.setTurnSpeed(-Robot.TURN_SPEED)
+		self.robot.setTurnSpeed(Robot.TURN_SPEED)
 		return
 
 	#end robot

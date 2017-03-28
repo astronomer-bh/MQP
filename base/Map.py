@@ -23,7 +23,7 @@ from libs.graphics import *
 
 class Map:
     MINCON = 0
-    MAXCON = 2000
+    MAXCON = 10000
     ROBOT = .35
     def __init__(self, id,  sizeX=600, sizeY=600, scale=100):
         self.win = GraphWin(("Robot"), sizeX, sizeY)
