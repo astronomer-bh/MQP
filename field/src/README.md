@@ -28,7 +28,12 @@ If this does not work or a specific dependency fails you may have to look up the
 - libv4l (Ubuntu Video4Linux)
 
 ### Apriltags
-
+To install the AprilTags library move to the lib directory and then pull it from MIT's C++ repository:
+~~~~
+cd /usr/lib
+sudo svn co https://svn.csail.mit.edu/apriltags
+~~~~
+for more information on this repository please visit [here](http://people.csail.mit.edu/kaess/apriltags/)
 
 ### Building the File
 
