@@ -18,7 +18,7 @@ sudo shutdown now -r
 ~~~~
 The following command will install all required dependencies for the field code:
 ~~~~
-sudo apt-get install subversion cmake libopencv-dev libeigen3-dev libv4l-dev
+sudo apt-get install subversion cmake libopencv-dev libeigen3-dev libv4l-dev c++11
 ~~~~
 If this does not work or a specific dependency fails you may have to look up their new install paths. The list of all dependencies are as follows:
 - Subversion
@@ -30,10 +30,12 @@ If this does not work or a specific dependency fails you may have to look up the
 ### Apriltags
 To install the AprilTags library move to the lib directory and then pull it from MIT's C++ repository:
 ~~~~
-cd /usr/lib
+cd /usr/include
 sudo svn co https://svn.csail.mit.edu/apriltags
 ~~~~
 for more information on this repository please visit [here](http://people.csail.mit.edu/kaess/apriltags/)
+
+The way this library is installed allows for it to be used across the field and copter files. Unfortunately, this is not how it was originally designed. To remedy this just rename all #include AprilTags/{filename.h} instances to just #include {filename.h}.
 
 ### Building the File
 
