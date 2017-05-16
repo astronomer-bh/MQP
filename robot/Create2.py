@@ -45,10 +45,10 @@ class Robot:
 	ANGMARG = .05
 
 	#robot initialization
-	ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
+	ROBOT_SERIAL_PORT = "/dev/ttyUSB1"
 
 	#imu initialization
-	IMU_SERIAL_PORT = "/dev/ttyUSB1"
+	IMU_SERIAL_PORT = "/dev/ttyUSB0"
 	IMU_GPIO_PIN = 18
 
 	#arduino initialization
