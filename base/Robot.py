@@ -51,7 +51,7 @@ class Robot:
     def comm(self):
         if self.keepRunning:
             #recieve posn
-            self.curpos, self.curgas = encode.recievePacket(sock=self.conn)
+            [self.curpos, self.curgas] = encode.recievePacket(sock=self.conn)
 
             #print x,y,theta,velocity
             print(self.curpos)
