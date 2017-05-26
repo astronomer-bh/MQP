@@ -46,7 +46,8 @@ class Robot:
 	TNSY_BAUD_RATE = 9600
 
 
-	def __init__(self, id, ip, mode):
+	#def __init__(self, id, ip, mode):
+	def __init__(self, mode):
 		self.id = id
 
 		#position initalization
@@ -79,28 +80,28 @@ class Robot:
 		self.calibrate()
 
 		# decide if only using encoders and which kalman filter
-		if mode != 'ENC':
-			self.mode = 'KF'
+		if mode == 'IMU_Test':
 			# start IMU
 			self.initIMU()
-
+'''
 			# Create Robot's Kalman filter
 			if mode == 'EKF':
 				# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
 				self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
-			else:
+			#else:
 				P = sympy.Matrix([[3.16731500368425e-12, 0, 0, 0, 0],
 								[0, 3.16731500368425e-12, 0, 0, 0],
 								[0, 0, 0, 0, 0],
 								[0, 0, 0, 0, 0],
 								[0, 0, 0, 0, 4.77032958164422e-11]])
 				self.filter = LKF.RobotNavigationLKF(.00000006, .001, P=P)
+				'''
 		else:
-			self.mode = 'ENC'
+			raise RuntimeError('Robot not initialized in a correct mode')
 
 		# Start TCP Connention
 		# ip:port
-		self.initComms(ip, 5732)
+		# self.initComms(ip, 5732)
 
 
 	###################
@@ -211,6 +212,7 @@ class Robot:
 	#Communication Functions#
 	#########################
 
+	# not using this for IMU test
 	def initComms(self, ip, port):
 		# Connect the socket to the port where the server is listening
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -318,10 +320,10 @@ class Robot:
 			self.requestGas()
 			self.updatePosn()
 			self.updateGas()
-			self.loopComms()
+			# self.loopComms()
 			self.tCoord()
 			self.move()
-			if self.veld == 0 and self.mode == 'KF':
+			if self.veld == 0 and self.mode == 'IMU_Test':  # zero the IMU if we're using it and veld???
 				self.zeroIMU()
 		self.terminate()
 		return
@@ -334,10 +336,10 @@ class Robot:
 ############################
 #Create and Run Robot on Pi#
 ############################
-parser = argparse.ArgumentParser()
-parser.add_argument("--id", dest='id', type=int, help="assign ID to robot")
-parser.add_argument("--ip", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
-parser.add_argument("--mode", dest='mode', type=str, help="LKF, EKF, ENC", default="ENC")
-args = parser.parse_args()
-robot = Robot(args.id, args.ip, args.mode)
-robot.main()
+#parser = argparse.ArgumentParser()
+#parser.add_argument("--id", dest='id', type=int, help="assign ID to robot")
+#parser.add_argument("--ip", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
+#parser.add_argument("--mode", dest='mode', type=str, help="LKF, EKF, ENC", default="ENC")
+#args = parser.parse_args()
+plumba = Robot('IMU_Test')
+plumba.main()
