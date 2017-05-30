@@ -316,15 +316,22 @@ class Robot:
 	#ask for gasses so they can be grabbed while position is getting updated
 	#best chance to get loaction accurate to position
 	def main(self):
-		while self.keepRunning:
+		t_end = time.time() + 10
+		#while self.keepRunning:
+		while time.time() < t_end:
+		'''
 			self.requestGas()
 			self.updatePosn()
 			self.updateGas()
-			# self.loopComms()
+			self.loopComms()
 			self.tCoord()
 			self.move()
 			if self.veld == 0 and self.mode == 'IMU_Test':  # zero the IMU if we're using it and veld???
-				self.zeroIMU()
+				self.zeroIMU()'''
+			
+			self.robot.setForwardSpeed(50)
+		self.robot.setForwardSpeed(0)
+		sys.exit() # stop now.  I think the robot will keep driving
 		self.terminate()
 		return
 
