@@ -247,7 +247,7 @@ class Robot:
 		#determine what to do with message
 		if rcv == "out":
 			encode.sendPacket(sock=self.sock, message="out")
-			quit()
+			quit() #TODO: should this be self.quit
 		else:
 			self.desired[0] = rcv[0]
 			self.desired[1] = rcv[1]
@@ -312,7 +312,7 @@ class Robot:
 		return
 
 	#end robot
-	def quit(self):
+	def quit(self):  #TODO: does naming this quit mess with things?
 		self.keepRunning = False
 		self.robot.goHome()
 		return
