@@ -243,10 +243,10 @@ class Robot:
 		# determine what to do with message
 		if rcv == "out":
 			encode.sendPacket(sock=self.sock, message="out")
-			self.quit()  # TODO: should this be self.quit, trying it
+			self.quits()  # TODO: should this be self.quit, trying it
 		elif rcv is None:  # base station not cooperating, this catches when it closes and there is an empty socket connection, and (should) gracefullly kill the robot
 			print("exiting i guess :(")
-			self.quit()
+			self.quits()
 		else:
 			self.desired[0] = rcv[0]
 			self.desired[1] = rcv[1]
@@ -310,7 +310,7 @@ class Robot:
 		return
 
 	# end robot
-	def quit(self):  # TODO: does naming this quit mess with things?
+	def quits(self):  # TODO: does naming this quit mess with things?
 		self.keepRunning = False
 		self.robot.goHome()
 		return
