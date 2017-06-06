@@ -87,7 +87,7 @@ class Robot:
 		self.tnsy = serial.Serial(Robot.TNSY_SERIAL_PORT, Robot.TNSY_BAUD_RATE)
 
 		# calibrate the COZIR sensors
-		self.calibrate()
+		self.calibrate() # print stayements of readout.  Also when should calibration start, change gas graph readout, add dircetion
 
 		# decide if only using encoders and which kalman filter
 		if mode != 'ENC':
@@ -100,11 +100,9 @@ class Robot:
 				# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
 				self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
 			else:
-				P = sympy.Matrix([[3.16731500368425e-12, 0, 0, 0, 0],
-								  [0, 3.16731500368425e-12, 0, 0, 0],
-								  [0, 0, 0, 0, 0],
-								  [0, 0, 0, 0, 0],
-								  [0, 0, 0, 0, 4.77032958164422e-11]])
+				P = sympy.Matrix([[3.16731500368425e-12, 0, 0],
+								  [0, 3.16731500368425e-12, 0],
+								  [0, 0, 4.77032958164422e-11]])
 				self.filter = LKF.RobotNavigationLKF(.00000006, .001, P=P)
 		else:
 			self.mode = 'ENC'
@@ -164,8 +162,6 @@ class Robot:
 			# send to EKF
 			z = Matrix([[accl_x - self.accl_x_offset],
 						[accl_y - self.accl_y_offset],
-						[accl_x - self.accl_x_offset],
-						[accl_y - self.accl_y_offset],
 						[gyro_z - self.gyro_z_offset]])
 			estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
 
@@ -173,8 +169,8 @@ class Robot:
 			# update position bits
 			self.curpos[0] = estX[0]
 			self.curpos[1] = estX[1]
-			self.curpos[2] = math.fmod(estX[4], (2 * math.pi))
-			self.vel = math.sqrt(math.pow(estX[2], 2) + math.pow(estX[3], 2))
+			self.curpos[2] = math.fmod(estX[2], (2 * math.pi))
+			# self.vel = math.sqrt(math.pow(estX[2], 2) + math.pow(estX[3], 2))
 		else:
 			self.curpos[2] += deltaang
 			self.curpos[2] = math.fmod(self.curpos[2], (2 * math.pi))
@@ -315,6 +311,14 @@ class Robot:
 		self.robot.goHome()
 		return
 
+	# function to allow for saving of position and estimates for later confirmation
+	def savePosn(self):						# syntax probably literal trash; haven't done file writes in a while
+		f = open('predicted position','a')
+		sPrediction = str(self.curpos)
+		f.write(sPrediction)
+		f.write("\n")
+		f.close()
+
 	###############
 	# Main Function#
 	###############
@@ -325,6 +329,7 @@ class Robot:
 		while self.keepRunning:
 			self.requestGas()
 			self.updatePosn()
+			self.savePosn()
 			self.updateGas()
 			self.loopComms()
 			self.tCoord()
