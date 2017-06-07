@@ -246,6 +246,7 @@ class Robot:
 		else:
 			self.desired[0] = rcv[0]
 			self.desired[1] = rcv[1]
+			print(rcv)
 
 		return
 
@@ -259,7 +260,7 @@ class Robot:
 	# change input velocities to v and theta
 	def tCoord(self):
 		self.veld = math.sqrt(self.desired[0] ** 2 + self.desired[1] ** 2)
-
+		print(self.veld)
 		if (self.desired[0] == 0 and self.desired[1] == 0):
 			self.thetad = self.curpos[2]
 		elif (self.desired[0] == 0 and self.desired[1] > 0):

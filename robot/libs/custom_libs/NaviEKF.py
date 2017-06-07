@@ -98,6 +98,8 @@ class RobotNavigationEKF:
 		S = HJacobian * self.P * HJacobian.transpose() + self.R
 		K = self.P * HJacobian * S.inv()
 		self.P = self.P - K * S * K.transpose()
+		print("p")
+		print(self.p)
 		self.updateEstX(delD, delTheta)
 		h = self.h(dt)
 		self.estX = self.estX + K * (z - h)
