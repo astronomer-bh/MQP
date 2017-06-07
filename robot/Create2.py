@@ -149,6 +149,7 @@ class Robot:
 		self.startt = time.time()
 
 		# calculate encoder bits (mm & rad)
+		print("getting encoder stuffs")
 		deltadist = self.robot.getDistance() / 1000
 		deltaang = self.robot.getAngle() * math.pi / 180
 
@@ -163,6 +164,7 @@ class Robot:
 			z = sympy.Matrix([[accl_x - self.accl_x_offset],
 						[accl_y - self.accl_y_offset],
 						[gyro_z - self.gyro_z_offset]])
+			print("z")
 			estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
 
 			print("filter P")
@@ -188,7 +190,7 @@ class Robot:
 		measurements = 0
 		gasses = [0, 0, 0, 0]
 		self.gas_offset = [0, 0, 0, 0]
-		while (curtime < start + 30):
+		while (curtime < start + 15):
 			self.requestGas()
 			self.updateGas()
 			gasses = list(np.array(self.gas) + np.array(gasses))
@@ -201,11 +203,13 @@ class Robot:
 
 	# tell teensy to grab gas info
 	def requestGas(self):
+		print("requsting Gas")
 		self.tnsy.write('\n'.encode('utf-8'))
 		return
 
 	# grabs serial port data and splits across commas
 	def updateGas(self):
+		print("update Gas")
 		line = self.tnsy.readline().decode("utf-8")
 		gas = list(map(int, line.split(",")))
 		self.gas = list(np.array(gas) - np.array(self.gas_offset))
@@ -230,6 +234,8 @@ class Robot:
 
 	def loopComms(self):
 		snd = [self.curpos, self.gas]
+		print("send coordinates")
+		print(snd)
 		# send curpos
 		encode.sendPacket(sock=self.sock, message=snd)
 
@@ -316,6 +322,7 @@ class Robot:
 
 	# function to allow for saving of position and estimates for later confirmation
 	def savePosn(self):						# syntax probably literal trash; haven't done file writes in a while
+		print("saving position to file")
 		f = open('predicted position','a')
 		sPrediction = str(self.curpos)
 		f.write(sPrediction)
