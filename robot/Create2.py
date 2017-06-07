@@ -160,7 +160,7 @@ class Robot:
 			accl_x, accl_y, accl_z = self.bno.read_accelerometer()
 
 			# send to EKF
-			z = Matrix([[accl_x - self.accl_x_offset],
+			z = sympy.Matrix([[accl_x - self.accl_x_offset],
 						[accl_y - self.accl_y_offset],
 						[gyro_z - self.gyro_z_offset]])
 			estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
@@ -350,7 +350,7 @@ class Robot:
 parser = argparse.ArgumentParser()
 parser.add_argument("--id", dest='id', type=int, help="assign ID to robot")
 parser.add_argument("--ip", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
-parser.add_argument("--mode", dest='mode', type=str, help="LKF, EKF, ENC", default="ENC")
+parser.add_argument("--mode", dest='mode', type=str, help="LKF, EKF, ENC", default="EKF")
 args = parser.parse_args()
 robot = Robot(args.id, args.ip, args.mode)
 robot.main()
