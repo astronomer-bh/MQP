@@ -165,6 +165,7 @@ class Robot:
 						[gyro_z - self.gyro_z_offset]])
 			estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
 
+			print("filter P")
 			print(self.filter.P)
 			# update position bits
 			self.curpos[0] = estX[0]
@@ -187,7 +188,7 @@ class Robot:
 		measurements = 0
 		gasses = [0, 0, 0, 0]
 		self.gas_offset = [0, 0, 0, 0]
-		while (curtime < start + 60):
+		while (curtime < start + 30):
 			self.requestGas()
 			self.updateGas()
 			gasses = list(np.array(self.gas) + np.array(gasses))
@@ -234,6 +235,7 @@ class Robot:
 
 		# recieve message
 		rcv = encode.recievePacket(sock=self.sock)
+		print("rcv")
 		print(rcv)
 
 		# determine what to do with message
@@ -246,7 +248,6 @@ class Robot:
 		else:
 			self.desired[0] = rcv[0]
 			self.desired[1] = rcv[1]
-			print(rcv)
 
 		return
 
@@ -260,6 +261,7 @@ class Robot:
 	# change input velocities to v and theta
 	def tCoord(self):
 		self.veld = math.sqrt(self.desired[0] ** 2 + self.desired[1] ** 2)
+		print("input velocity being requested")
 		print(self.veld)
 		if (self.desired[0] == 0 and self.desired[1] == 0):
 			self.thetad = self.curpos[2]
