@@ -10,7 +10,7 @@ class RobotNavigationEKF:
 		self.stdTheta = stdTheta
 		self.stdV = stdV
 		self.stdD = stdD
-		self.updateProcError(stdAD, stdAV, stdAG)
+		self.updateProcError(stdAD, stdAG)
 		self.P = P
 
 		self.M = sympy.Matrix([[stdTheta ** 2, 0, 0],
@@ -50,9 +50,9 @@ class RobotNavigationEKF:
 		return Q
 
 	# Process Error Covariance Matrix
-	def procErrorCovar(self, delD, delV, delTheta):
-		Fx = self.stateTransXJacob(delD, delV, delTheta)
-		Q = self.procNoiseCovar(delD, delV, delTheta)
+	def procErrorCovar(self, delD, delTheta):
+		Fx = self.stateTransXJacob(delD, delTheta)
+		Q = self.procNoiseCovar(delD, delTheta)
 		temP = Fx * self.P * Fx.T
 		if temP == 0 and Q == 0:
 			self.P = sympy.zeros(3)
@@ -63,7 +63,7 @@ class RobotNavigationEKF:
 		else:
 			self.P = temP + Q
 
-	def updateEstX(self, delD, delV, delTheta):
+	def updateEstX(self, delD, delTheta):
 		newX = sympy.Matrix([[self.estX[0] + delD * sympy.cos(self.estX[2] + delTheta)],
 							 [self.estX[1] + delD * sympy.cos(self.estX[2] + delTheta)],
 							 [self.estX[2] + delTheta]])
