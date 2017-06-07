@@ -97,8 +97,10 @@ class RobotNavigationEKF:
 	# C matrix
 	def HJacob(self, dt):
 		HJacob = sympy.Matrix(
-			[[(1 / (dt ** (2) * sympy.cos(self.estX[2]))), (1 / (dt ** (2) * sympy.sin(self.estX[2]))), 0],
-			 [(1 / (dt ** (2) * sympy.sin(self.estX[2]))), (1 / (dt ** (2) * sympy.cos(self.estX[2]))), 0],
+			[[sympy.cos(self.estX[2]) * 1 / (dt ** [2]), sympy.sin(self.estX[2]) * 1 / (dt ** [2]),
+			  (- self.estX[0] * sympy.sin(self.estX[2]) + sympy.cos(self.estX[2]) * self.estX[1]) * 1 / (dt ** [2])],
+			 [-sympy.sin(self.estX[2]) * 1 / (dt ** [2]), sympy.cos(self.estX[2]) * 1 / (dt ** [2]),
+			  (- self.estX[0] * sympy.sin(self.estX[2]) - sympy.cos(self.estX[2]) * self.estX[1]) * 1 / (dt ** [2])],
 			 [0, 0, (1 / dt)]])
 		print("HJacob")
 		print(HJacob)
@@ -123,10 +125,9 @@ class RobotNavigationEKF:
 		print(K)
 		self.P = self.P - K * S * K.transpose()
 		print("P")
-		print(self.P)
+		print("p")
+		print(self.p)
 		self.updateEstX(delD, delTheta)
 		h = self.h(dt)
 		self.estX = self.estX + K * (z - h)
-		print("new estX")
-		print(self.estX)
 		return self.estX
