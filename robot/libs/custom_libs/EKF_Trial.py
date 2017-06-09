@@ -4,7 +4,7 @@ import sympy
 from sympy import symbols, Matrix
 
 
-class RobotNavigatinoEKF:
+class RobotNavigatinoEKF: # TODO: spell this properly
 	def __init__(self, stdTheta, stdD, stdAD, stdAG):
 		# todo standard deviations of ??, probably measuremens or certainty in model
 		self.stdTheta = stdTheta
