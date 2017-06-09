@@ -30,6 +30,7 @@ sys.path.append('libs/')
 from libs.custom_libs import encoding_TCP as encode
 from libs.custom_libs import NaviEKF as EKF
 from libs.custom_libs import NaviLKF as LKF
+from libs.custom_libs import EKF_Trial as EKF_t
 from libs.breezycreate2 import iRobot
 from libs.Adafruit_BNO055 import BNO055
 
@@ -98,7 +99,8 @@ class Robot:
 			# Create Robot's Kalman filter
 			if mode == 'EKF':
 				# Inputs stdTheta, stdV, stdD, stdAD, stdAV, stdAG
-				self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
+				# self.filter = EKF.RobotNavigationEKF(.00000006, .00000006, .000000006, .001, .001, .001)
+				self.filter = EKF_t.RobotNavigationEKF(.00000006, .00000006, .001, .001)
 			else:
 				P = sympy.Matrix([[3.16731500368425e-12, 0, 0],
 								  [0, 3.16731500368425e-12, 0],
@@ -152,7 +154,7 @@ class Robot:
 		print("getting encoder stuffs")
 		deltadist = self.robot.getDistance() / 1000
 		deltaang = self.robot.getAngle() * math.pi / 180
-
+		u = [deltadist, deltaang]
 		# if in kalman filter mode, then use imu
 		# otherwise trash it cause imu is definitely not great
 		if self.mode == 'KF':
@@ -165,7 +167,8 @@ class Robot:
 						[accl_y - self.accl_y_offset],
 						[gyro_z - self.gyro_z_offset]])
 			print("z")
-			estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
+			#estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
+			estX = self.filter.KalmanFilter(z, u, deltat)
 
 			print("filter P")
 			print(self.filter.P)
