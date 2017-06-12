@@ -166,16 +166,15 @@ class Robot:
 			z = sympy.Matrix([[accl_x - self.accl_x_offset],
 						[accl_y - self.accl_y_offset],
 						[gyro_z - self.gyro_z_offset]])
-			print("z")
 			#estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
 			estX = self.filter.KalmanFilter(z, u, deltat)
 
-			print("filter P")
-			print(self.filter.P)
+			print("filter P:", self.filter.P)
 			# update position bits
 			self.curpos[0] = estX[0]
 			self.curpos[1] = estX[1]
 			self.curpos[2] = math.fmod(estX[2], (2 * math.pi))
+			print("current position from kalan filter:", self.curpos)
 			# self.vel = math.sqrt(math.pow(estX[2], 2) + math.pow(estX[3], 2))
 		else:
 			self.curpos[2] += deltaang
