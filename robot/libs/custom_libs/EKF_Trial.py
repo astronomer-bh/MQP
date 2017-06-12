@@ -25,7 +25,7 @@ class RobotNavigationEKF:
 			[0, stdAD ** 2, 0],
 			[0, 0, stdAG ** 2]
 		])
-		self.estX = sympy.zeros((3, 1))
+		self.estX = sympy.Matrix([[0],[0],[0]])
 
 	# Jacobian of the Expected Measurement Function with respect to X (state)
 	# C matrix
@@ -67,7 +67,7 @@ class RobotNavigationEKF:
 	# Process Noise Covariance Matrix
 	def procNoiseCovar(self, u):
 		Fu = self.stateTransUJacob(u)
-		Q = Fu * self.M * sympy.Transpose(Fu)	#todo transposing
+		Q = Fu * self.M * Fu.T	#todo transposing
 		return Q
 
 	# process error covariance matrix
@@ -76,7 +76,7 @@ class RobotNavigationEKF:
 		print("state trans x Jacobian matrix:", Fx)
 		Q = self.procNoiseCovar(u)
 		print("process noise covariance Q:", Q)
-		temP = Fx * self.P * sympy.Transpose(Fx)	#todo what does this do transposing (old  Fx.T)
+		temP = Fx * self.P * Fx.T	#todo what does this do transposing (old  Fx.T)
 		if temP == 0 and Q == 0:
 			self.P = sympy.zeros(3)
 		elif temP == 0:
@@ -112,12 +112,12 @@ class RobotNavigationEKF:
 		self.procErrorCovar(u)
 		print("process error covariance matrix P:", self.P)
 		#todo what is S
-		S = Hjacobian * self.P * sympy.Transpose(Hjacobian) + self.R	#todo transposing
+		S = Hjacobian * self.P * Hjacobian.T + self.R	#todo transposing
 		print("S matrix:", S)
 		K = self.P * Hjacobian * S.inv()
 		print("kalman gain:", K)
 		#update P
-		self.P = self.P - K * S * sympy.Transpose(K) #todo transposing (old K.transpose())
+		self.P = self.P - K * S * K.T #todo transposing (old K.transpose())
 		print("new P matrix:", self.P)
 		self.updateEstX(u)
 		h = self.expectedZfcn(dt)
