@@ -6,7 +6,7 @@
 # \_|   |_|\__,_|_| |_| |_|\___| \_|  |_/\_/\_\_|
 #
 #
-# Create2.py
+# Create2_irobot.py
 #
 # Python interface for Plume MQP robot
 #
@@ -32,6 +32,7 @@ from libs.custom_libs import NaviEKF as EKF
 from libs.custom_libs import NaviLKF as LKF
 from libs.custom_libs import EKF_Trial as EKF_t
 from libs.breezycreate2 import iRobot
+from libs.breezycreate2 import _Create2
 from libs.Adafruit_BNO055 import BNO055
 
 
@@ -47,10 +48,10 @@ class Robot:
 	ANGMARG = .05
 
 	# robot initialization
-	ROBOT_SERIAL_PORT = "/dev/ttyUSB1"
+	ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
 
 	# imu initialization
-	IMU_SERIAL_PORT = "/dev/ttyUSB0"
+	IMU_SERIAL_PORT = "/dev/ttyUSB1"
 	IMU_GPIO_PIN = 18
 
 	# arduino initialization
@@ -192,7 +193,7 @@ class Robot:
 		measurements = 0
 		gasses = [0, 0, 0, 0]
 		self.gas_offset = [0, 0, 0, 0]
-		while (curtime < start + 15):
+		while (curtime < start + 3):	#todo return to 60 following fixes
 			self.requestGas()
 			self.updateGas()
 			gasses = list(np.array(self.gas) + np.array(gasses))
