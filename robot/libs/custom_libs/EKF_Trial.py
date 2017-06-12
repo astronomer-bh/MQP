@@ -4,7 +4,7 @@ import sympy
 from sympy import symbols, Matrix
 
 
-class RobotNavigationEKF:
+class RobotNavigatinoEKF:
 	def __init__(self, stdTheta, stdD, stdAD, stdAG):
 		# todo standard deviations of ??, probably measuremens or certainty in model
 		self.stdTheta = stdTheta
@@ -31,10 +31,10 @@ class RobotNavigationEKF:
 	# C matrix
 	def C_Matrix(self, dt):
 		C_Matrix = sympy.Matrix([
-			[sympy.cos(self.estX[2]) * 1 / (dt ** (2)), sympy.sin(self.estX[2]) * 1 / (dt ** (2)),
-			 (- self.estX[0] * sympy.sin(self.estX[2]) + sympy.cos(self.estX[2]) * self.estX[1]) * 1 / (dt ** (2))],
-			[-sympy.sin(self.estX[2]) * 1 / (dt ** (2)), sympy.cos(self.estX[2]) * 1 / (dt ** (2)),
-			 (- self.estX[0] * sympy.sin(self.estX[2]) - sympy.cos(self.estX[2]) * self.estX[1]) * 1 / (dt ** (2))],
+			[sympy.cos(self.estX[2]) * 1 / (dt ** [2]), sympy.sin(self.estX[2]) * 1 / (dt ** [2]),
+			 (- self.estX[0] * sympy.sin(self.estX[2]) + sympy.cos(self.estX[2]) * self.estX[1]) * 1 / (dt ** [2])],
+			[-sympy.sin(self.estX[2]) * 1 / (dt ** [2]), sympy.cos(self.estX[2]) * 1 / (dt ** [2]),
+			 (- self.estX[0] * sympy.sin(self.estX[2]) - sympy.cos(self.estX[2]) * self.estX[1]) * 1 / (dt ** [2])],
 			[0, 0, (1 / dt)]
 		])
 		return C_Matrix
@@ -51,7 +51,6 @@ class RobotNavigationEKF:
 			[0, 0, 1]
 		])
 		return Fx
-
 	def stateTransUJacob(self, u):
 		theta = self.estX[2]
 		delD = u[0]
@@ -73,10 +72,8 @@ class RobotNavigationEKF:
 	# process error covariance matrix
 	def procErrorCovar(self, u):
 		Fx = self.stateTransXJacob(u)
-		print("state trans x Jacobian matrix:", Fx)
 		Q = self.procNoiseCovar(u)
-		print("process noise covariance Q:", Q)
-		temP = Fx * self.P * sympy.Transpose(Fx)	#todo what does this do transposing (old  Fx.T)
+		temP = Fx * self.P * Fx.T	#todo what does this do transposing
 		if temP == 0 and Q == 0:
 			self.P = sympy.zeros(3)
 		elif temP == 0:
@@ -101,27 +98,18 @@ class RobotNavigationEKF:
 		expectedZfcn = self.C_Matrix(dt) * self.estX
 		return expectedZfcn
 
+
 	# main kalman function, all preceding feeds into this
 	# u = [delD, delTheta]
 	def KalmanFilter(self, z, u, dt):
-		print("measurement matrix z:", z)
-		print("control matrix u:", u)
-		print("time seperation dt:", dt)
 		Hjacobian = self.C_Matrix(dt)
-		print("C_matrix :", Hjacobian)
 		self.procErrorCovar(u)
-		print("process error covariance matrix P:", self.P)
 		#todo what is S
-		S = Hjacobian * self.P * sympy.Transpose(Hjacobian) + self.R	#todo transposing
-		print("S matrix:", S)
+		S = Hjacobian * self.P * Hjacobian.transpose() + self.R	#todo transposing
 		K = self.P * Hjacobian * S.inv()
-		print("kalman gain:", K)
 		#update P
-		self.P = self.P - K * S * sympy.Transpose(K) #todo transposing (old K.transpose())
-		print("new P matrix:", self.P)
+		self.P = self.P - K * S * K.transpose() #todo transposing
 		self.updateEstX(u)
 		h = self.expectedZfcn(dt)
-		print("new measurement function predicition:", h)
 		self.estX = self.estX + K * (z - h)
-		print("final X estimate:", self.estX)
 		return self.estX
