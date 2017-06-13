@@ -44,7 +44,7 @@ class Base:
         print("Waiting for connections")
 
         #min and max concentrations
-        self.minCon = 1000000
+        self.minCon = 10000
         self.maxCon = 0
 
         self.robots = []

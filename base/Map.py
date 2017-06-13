@@ -24,7 +24,7 @@ from libs.graphics import *
 
 class Map:
 	MINCON = 0
-	MAXCON = 5000  # original is 10000, changed for testing
+	MAXCON = 3000  # original is 10000, changed for testing
 	ROBOT = .35
 
 	def __init__(self, id, sizeX=600, sizeY=600, scale=100):

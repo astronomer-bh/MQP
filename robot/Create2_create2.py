@@ -74,6 +74,7 @@ class Robot:
 		self.velr = 0
 		self.vell = 0
 		self.uTransform = sympy.Matrix([[0, 0], [0, 0]])
+		self.vmax = 150
 
 		# time variables
 		self.startt = 0
@@ -160,8 +161,11 @@ class Robot:
 
 		# calculate encoder bits (mm & rad)
 		print("getting encoder stuffs")
-		deltadist = self.robot.sensor(19) / 1000
-		deltaang = self.robot.sensor(20) * math.pi / 180
+		# get distance and angle readings
+		self.robot.get_packet(19)
+		self.robot.get_packet(20)
+		deltadist = self.robot.sensor_state['distance'] / 1000
+		deltaang = self.robot.sensor_state['angle'] * math.pi / 180
 		u = [deltadist, deltaang]
 		# if in kalman filter mode, then use imu
 		# otherwise trash it cause imu is definitely not great
@@ -285,18 +289,19 @@ class Robot:
 			self.thetad = math.pi / (2)
 		elif (self.desired[0] == 0 and self.desired[1] < 0):
 			self.thetad = math.pi / (-2)
-		elif (self.desired[0] > 0):
+		# elif (self.desired[0] > 0):
+		# 	self.thetad = math.atan(self.desired[1] / self.desired[0])
+		# elif (self.desired[0] < 0):
+		# 	self.thetad = math.pi + math.atan(self.desired[1] / self.desired[0])
+		else:
 			self.thetad = math.atan(self.desired[1] / self.desired[0])
-		elif (self.desired[0] < 0):
-			self.thetad = math.pi + math.atan(self.desired[1] / self.desired[0])
-
 		sepd = 235
-		self.uTransform = sympy.Matrix([
+		self.uTransform = sympy.Matrix([	# todo send this to Base
 			[self.deltat / 2, self.deltat / 2],
 			[self.deltat / sepd, -self.deltat / sepd]
 		])
 
-		[self.velr, self.vell] = self.uTransform.inv() * [self.veld, self.thetad]
+		[self.velr, self.vell] = self.uTransform.inv() * sympy.Matrix([self.veld, self.thetad])
 
 		return
 
@@ -307,6 +312,13 @@ class Robot:
 	# movement control
 	# decide turn or straight
 	def move(self):
+		if self.velr > self.vell and self.velr > self.vmax:	#todo move this to base Robot
+			self.vell /= self.velr / self.vmax
+			self.velr /= self.velr / self.vmax
+		elif self.vell > self.vmax:
+			self.velr /= self.vell / self.vmax
+			self.vell /= self.vell / self.vmax
+		print(self.velr, self.vell)
 		self.robot.drive_direct(self.velr,self.vell)
 		# diff = math.tan((self.thetad - self.curpos[2]) / 2)
 		# if (diff < -Robot.ANGMARG):
