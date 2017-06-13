@@ -442,21 +442,21 @@ class _Create2(object):
 
 
 		if velr >= -500 and velr <= 500:
-			v = int(velr) & 0xffff
+			vr = int(velr) & 0xffff
 			# Convert 16bit velocity to Hex
 		else:
 			noError = False
 			raise _ROIDataByteError("Invalid velocity right input")
 
 		if vell >= -500 and vell <= 500:
-			v = int(vell) & 0xffff
+			vl = int(vell) & 0xffff
 			# Convert 16bit velocity to Hex
 		else:
 			noError = False
 			raise _ROIDataByteError("Invalid velocity left input")
 
 		if noError:
-			data = struct.unpack('4B', struct.pack('>2H', v, r))
+			data = struct.unpack('4B', struct.pack('>2H', vr, vl))
 			# An example of what data looks like:
 			# print data >> (255, 56, 1, 244)
 

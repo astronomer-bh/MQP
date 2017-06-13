@@ -83,13 +83,12 @@ class Robot:
 		# connect robot
 		# TODO: start in full mode. not working correctly as is
 		self.robot = _Create2(Robot.ROBOT_SERIAL_PORT, Robot.ROBOT_BAUD_RATE)
-		self.robot.playNote('A4', 20)  # say hi!
+		self.robot.start()
+		self.robot.safe()
+		self.robot.play_note('A4', 20)  # say hi!
 
 		# open connection to teensy
 		self.tnsy = serial.Serial(Robot.TNSY_SERIAL_PORT, Robot.TNSY_BAUD_RATE)
-
-		# calibrate the COZIR sensors
-		self.calibrate() # print stayements of readout.  Also when should calibration start, change gas graph readout, add dircetion
 
 		# decide if only using encoders and which kalman filter
 
@@ -212,9 +211,6 @@ class Robot:
 			self.tries()
 			ranName +=1
 		return
-
-
-
 
 ############################
 # Create and Run Robot on Pi#

@@ -71,6 +71,9 @@ class Robot:
 		self.veld = 0
 		self.thetad = 0
 		self.vel = 0  # actual velocity
+		self.velr = 0
+		self.vell = 0
+		self.uTransform = sympy.Matrix([[0, 0], [0, 0]])
 
 		# time variables
 		self.startt = 0
@@ -84,13 +87,16 @@ class Robot:
 		# connect robot
 		# TODO: start in full mode. not working correctly as is
 		self.robot = _Create2(Robot.ROBOT_SERIAL_PORT, Robot.ROBOT_BAUD_RATE)
-		self.robot.playNote('A4', 20)  # say hi!
+		self.robot.start()
+		self.robot.safe()
+
+		self.robot.play_note('A4', 20)  # say hi!
 
 		# open connection to teensy
 		self.tnsy = serial.Serial(Robot.TNSY_SERIAL_PORT, Robot.TNSY_BAUD_RATE)
 
 		# calibrate the COZIR sensors
-		self.calibrate() # print stayements of readout.  Also when should calibration start, change gas graph readout, add dircetion
+		self.calibrate()  # print stayements of readout.  Also when should calibration start, change gas graph readout, add dircetion
 
 		# decide if only using encoders and which kalman filter
 		if mode != 'ENC':
@@ -149,7 +155,7 @@ class Robot:
 	def updatePosn(self):
 		# update time change
 		self.endt = time.time()
-		deltat = self.endt - self.startt
+		self.deltat = self.endt - self.startt
 		self.startt = time.time()
 
 		# calculate encoder bits (mm & rad)
@@ -166,10 +172,10 @@ class Robot:
 
 			# send to EKF
 			z = sympy.Matrix([[accl_x - self.accl_x_offset],
-						[accl_y - self.accl_y_offset],
-						[gyro_z - self.gyro_z_offset]])
-			#estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
-			estX = self.filter.KalmanFilter(z, u, deltat)
+							  [accl_y - self.accl_y_offset],
+							  [gyro_z - self.gyro_z_offset]])
+			# estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
+			estX = self.filter.KalmanFilter(z, u, self.deltat)
 
 			print("filter P:", self.filter.P)
 			# update position bits
@@ -177,7 +183,7 @@ class Robot:
 			self.curpos[1] = estX[1]
 			self.curpos[2] = math.fmod(estX[2], (2 * math.pi))
 			print("current position from kalan filter:", self.curpos)
-			# self.vel = math.sqrt(math.pow(estX[2], 2) + math.pow(estX[3], 2))
+		# self.vel = math.sqrt(math.pow(estX[2], 2) + math.pow(estX[3], 2))
 		else:
 			self.curpos[2] += deltaang
 			self.curpos[2] = math.fmod(self.curpos[2], (2 * math.pi))
@@ -194,7 +200,7 @@ class Robot:
 		measurements = 0
 		gasses = [0, 0, 0, 0]
 		self.gas_offset = [0, 0, 0, 0]
-		while (curtime < start + 3):	#todo return to 60 following fixes
+		while (curtime < start + 3):  # todo return to 60 following fixes
 			self.requestGas()
 			self.updateGas()
 			gasses = list(np.array(self.gas) + np.array(gasses))
@@ -284,6 +290,14 @@ class Robot:
 		elif (self.desired[0] < 0):
 			self.thetad = math.pi + math.atan(self.desired[1] / self.desired[0])
 
+		sepd = 235
+		self.uTransform = sympy.Matrix([
+			[self.deltat / 2, self.deltat / 2],
+			[self.deltat / sepd, -self.deltat / sepd]
+		])
+
+		[self.velr, self.vell] = self.uTransform.inv() * [self.veld, self.thetad]
+
 		return
 
 	###################
@@ -293,15 +307,18 @@ class Robot:
 	# movement control
 	# decide turn or straight
 	def move(self):
-		diff = math.tan((self.thetad - self.curpos[2]) / 2)
-		if (diff < -Robot.ANGMARG):
-			self.turnCW()
-		elif (diff > Robot.ANGMARG):
-			self.turnCCW()
-		else:
-			self.drive()
-			return True
-		return False
+		self.robot.drive_direct(self.velr,self.vell)
+		# diff = math.tan((self.thetad - self.curpos[2]) / 2)
+		# if (diff < -Robot.ANGMARG):
+
+		# 	self.turnCW()
+		# elif (diff > Robot.ANGMARG):
+		# 	self.turnCCW()
+		# else:
+		# 	self.drive()
+		# 	return True
+		# return False
+
 
 	# drive desired velocity
 	def drive(self):
@@ -325,9 +342,9 @@ class Robot:
 		return
 
 	# function to allow for saving of position and estimates for later confirmation
-	def savePosn(self):						# syntax probably literal trash; haven't done file writes in a while
+	def savePosn(self):  # syntax probably literal trash; haven't done file writes in a while
 		print("saving position to file")
-		f = open('predicted position','a')
+		f = open('predicted position', 'a')
 		sPrediction = str(self.curpos)
 		f.write(sPrediction)
 		f.write("\n")
