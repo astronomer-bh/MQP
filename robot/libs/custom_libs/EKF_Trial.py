@@ -40,6 +40,7 @@ class RobotNavigationEKF:
 		return C_Matrix
 
 	# todo Jacobian of the State Transition Matrix with respect to X (state), what is
+	# A Matrix
 	def stateTransXJacob(self, u):
 		theta = self.estX[2]
 		delD = u[0]
@@ -52,14 +53,15 @@ class RobotNavigationEKF:
 		])
 		return Fx
 
+	# B Matrix
 	def stateTransUJacob(self, u):
 		theta = self.estX[2]
 		delD = u[0]
 		delTheta = u[1]
 		#todo where does this matrix come from
 		Fu = sympy.Matrix([
-			[-delD * sympy.sin(theta + delTheta), 0, sympy.cos(theta + delTheta)],
-			[delD * sympy.cos(theta + delTheta), 0, sympy.sin(theta + delTheta)],
+			[sympy.cos(theta + delTheta), 0, -delD*sympy.sin(theta + delTheta)],
+			[sympy.sin(theta + delTheta), 0, delD*sympy.cos(theta + delTheta)],
 			[1, 0, 0]
 		])
 		return Fu

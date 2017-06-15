@@ -47,20 +47,35 @@ class Robot:
 
 	ANGMARG = .05
 
-	# robot initialization
-	ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
-	ROBOT_BAUD_RATE = 115200
 
-	# imu initialization
-	IMU_SERIAL_PORT = "/dev/ttyUSB1"
-	IMU_GPIO_PIN = 18
+	def __init__(self, id, ip, mode, usbport):
+		if usbport == 0:
+			# robot initialization
+			ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
+			ROBOT_BAUD_RATE = 115200
 
-	# arduino initialization
-	# TODO: Is this real? Sorrect port? Might conflict with robot
-	TNSY_SERIAL_PORT = "/dev/ttyACM0"
-	TNSY_BAUD_RATE = 9600
+			# imu initialization
+			IMU_SERIAL_PORT = "/dev/ttyUSB1"
+			IMU_GPIO_PIN = 18
+		elif usbport == 1:
+			# robot initialization
+			ROBOT_SERIAL_PORT = "/dev/ttyUSB1"
+			ROBOT_BAUD_RATE = 115200
 
-	def __init__(self, id, ip, mode):
+			# imu initialization
+			IMU_SERIAL_PORT = "/dev/ttyUSB0"
+			IMU_GPIO_PIN = 18
+		# arduino initialization
+		# TODO: Is this real? Sorrect port? Might conflict with robot
+		TNSY_SERIAL_PORT = "/dev/ttyACM0"
+		TNSY_BAUD_RATE = 9600
+
+
+
+
+
+
+
 		self.id = id
 
 		# position initalization
@@ -164,8 +179,9 @@ class Robot:
 		# get distance and angle readings
 		self.robot.get_packet(19)
 		self.robot.get_packet(20)
-		deltadist = self.robot.sensor_state['distance'] / 1000
-		deltaang = self.robot.sensor_state['angle'] * math.pi / 180
+		print("encoder info probs:", self.robot.sensor_state['distance'], self.robot.sensor_state['angle'] )
+		deltadist = self.robot.sensor_state['distance'] / 1000		# meters
+		deltaang = self.robot.sensor_state['angle'] * math.pi / 180	# radians
 		u = [deltadist, deltaang]
 		# if in kalman filter mode, then use imu
 		# otherwise trash it cause imu is definitely not great
@@ -217,13 +233,11 @@ class Robot:
 
 	# tell teensy to grab gas info
 	def requestGas(self):
-		print("requsting Gas")
 		self.tnsy.write('\n'.encode('utf-8'))
 		return
 
 	# grabs serial port data and splits across commas
 	def updateGas(self):
-		print("update Gas")
 		line = self.tnsy.readline().decode("utf-8")
 		gas = list(map(int, line.split(",")))
 		self.gas = list(np.array(gas) - np.array(self.gas_offset))
@@ -248,15 +262,13 @@ class Robot:
 
 	def loopComms(self):
 		snd = [self.curpos, self.gas]
-		print("send coordinates")
-		print(snd)
+		print("send coordinates:",snd)
 		# send curpos
 		encode.sendPacket(sock=self.sock, message=snd)
 
 		# recieve message
 		rcv = encode.recievePacket(sock=self.sock)
-		print("rcv")
-		print(rcv)
+		print("rcv:", rcv)
 
 		# determine what to do with message
 		if rcv == "out":
@@ -281,8 +293,7 @@ class Robot:
 	# change input velocities to v and theta
 	def tCoord(self):
 		self.veld = math.sqrt(self.desired[0] ** 2 + self.desired[1] ** 2)
-		print("input velocity being requested")
-		print(self.veld)
+		print("input velocity being requested:",self.veld)
 		if (self.desired[0] == 0 and self.desired[1] == 0):
 			self.thetad = self.curpos[2]
 		elif (self.desired[0] == 0 and self.desired[1] > 0):
@@ -318,7 +329,7 @@ class Robot:
 		elif self.vell > self.vmax:
 			self.velr /= self.vell / self.vmax
 			self.vell /= self.vell / self.vmax
-		print(self.velr, self.vell)
+		print("Vr and Vl:", self.velr, self.vell)
 		self.robot.drive_direct(self.velr,self.vell)
 		# diff = math.tan((self.thetad - self.curpos[2]) / 2)
 		# if (diff < -Robot.ANGMARG):
@@ -355,7 +366,7 @@ class Robot:
 
 	# function to allow for saving of position and estimates for later confirmation
 	def savePosn(self):  # syntax probably literal trash; haven't done file writes in a while
-		print("saving position to file")
+		print("saving position to file, probably")
 		f = open('predicted position', 'a')
 		sPrediction = str(self.curpos)
 		f.write(sPrediction)
@@ -394,6 +405,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--id", dest='id', type=int, help="assign ID to robot")
 parser.add_argument("--ip", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
 parser.add_argument("--mode", dest='mode', type=str, help="LKF, EKF, ENC", default="EKF")
+parser.add_argument("--usbport", dest='usbport', typ=int,help="switches usb port if needed: 0,1", default = 0)
 args = parser.parse_args()
-robot = Robot(args.id, args.ip, args.mode)
+robot = Robot(args.id, args.ip, args.mode, args.usbport)
 robot.main()
