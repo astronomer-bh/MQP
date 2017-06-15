@@ -15,9 +15,8 @@ class RobotNavigationEKF:
 		self.P = sympy.eye(3)
 		# todo what is M, and why is theta first?
 		self.M = sympy.Matrix([
-			[stdTheta ** 2, 0, 0],
-			[0, stdD ** 2, 0],
-			[0, 0, stdD ** 2]
+			[stdD ** 2, 0],
+			[0, stdTheta ** 2],
 		])
 		# Process error covariance matrix
 		self.R = sympy.Matrix([
@@ -69,7 +68,7 @@ class RobotNavigationEKF:
 	# Process Noise Covariance Matrix
 	def procNoiseCovar(self, u):
 		Fu = self.stateTransUJacob(u)
-		Q = Fu * self.M * Fu.T	#todo transposing
+		Q = Fu * self.M * sympy.Matrix([[1],[u[1]]]) * Fu.T	#todo transposing
 		return Q
 
 	# process error covariance matrix
@@ -116,7 +115,7 @@ class RobotNavigationEKF:
 		#todo what is S
 		S = Hjacobian * self.P * Hjacobian.T + self.R	#todo transposing
 		print("S matrix:", S)
-		K = self.P * Hjacobian * S.inv()
+		K = self.P * Hjacobian.T * S.inv()
 		print("kalman gain:", K)
 		#update P
 		self.P = self.P - K * S * K.T #todo transposing (old K.transpose())
