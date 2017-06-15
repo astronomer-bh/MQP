@@ -47,34 +47,27 @@ class Robot:
 
 	ANGMARG = .05
 
-
 	def __init__(self, id, ip, mode, usbport):
-		if usbport == 0:
+		if usbport is '0':
 			# robot initialization
-			ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
-			ROBOT_BAUD_RATE = 115200
+			self.ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
+			self.ROBOT_BAUD_RATE = 115200
 
 			# imu initialization
-			IMU_SERIAL_PORT = "/dev/ttyUSB1"
-			IMU_GPIO_PIN = 18
-		elif usbport == 1:
+			self.IMU_SERIAL_PORT = "/dev/ttyUSB1"
+			self.IMU_GPIO_PIN = 18
+		elif usbport is '1':
 			# robot initialization
-			ROBOT_SERIAL_PORT = "/dev/ttyUSB1"
-			ROBOT_BAUD_RATE = 115200
+			self.ROBOT_SERIAL_PORT = "/dev/ttyUSB1"
+			self.ROBOT_BAUD_RATE = 115200
 
 			# imu initialization
-			IMU_SERIAL_PORT = "/dev/ttyUSB0"
-			IMU_GPIO_PIN = 18
+			self.IMU_SERIAL_PORT = "/dev/ttyUSB0"
+			self.IMU_GPIO_PIN = 18
 		# arduino initialization
 		# TODO: Is this real? Sorrect port? Might conflict with robot
-		TNSY_SERIAL_PORT = "/dev/ttyACM0"
-		TNSY_BAUD_RATE = 9600
-
-
-
-
-
-
+		self.TNSY_SERIAL_PORT = "/dev/ttyACM0"
+		self.TNSY_BAUD_RATE = 9600
 
 		self.id = id
 
@@ -102,14 +95,14 @@ class Robot:
 
 		# connect robot
 		# TODO: start in full mode. not working correctly as is
-		self.robot = _Create2(Robot.ROBOT_SERIAL_PORT, Robot.ROBOT_BAUD_RATE)
+		self.robot = _Create2(self.ROBOT_SERIAL_PORT, self.ROBOT_BAUD_RATE)
 		self.robot.start()
 		self.robot.safe()
 
 		self.robot.play_note('A4', 20)  # say hi!
 
 		# open connection to teensy
-		self.tnsy = serial.Serial(Robot.TNSY_SERIAL_PORT, Robot.TNSY_BAUD_RATE)
+		self.tnsy = serial.Serial(self.TNSY_SERIAL_PORT, self.TNSY_BAUD_RATE)
 
 		# calibrate the COZIR sensors
 		self.calibrate()  # print stayements of readout.  Also when should calibration start, change gas graph readout, add dircetion
@@ -143,7 +136,7 @@ class Robot:
 
 	def initIMU(self):
 		# open connection to imu (BNO055)
-		self.bno = BNO055.BNO055(serial_port=Robot.IMU_SERIAL_PORT, rst=Robot.IMU_GPIO_PIN)
+		self.bno = BNO055.BNO055(serial_port=self.IMU_SERIAL_PORT, rst=self.IMU_GPIO_PIN)
 
 		# Initialize the BNO055 and stop if something went wrong.
 		if not self.bno.begin():
@@ -179,9 +172,9 @@ class Robot:
 		# get distance and angle readings
 		self.robot.get_packet(19)
 		self.robot.get_packet(20)
-		print("encoder info probs:", self.robot.sensor_state['distance'], self.robot.sensor_state['angle'] )
-		deltadist = self.robot.sensor_state['distance'] / 1000		# meters
-		deltaang = self.robot.sensor_state['angle'] * math.pi / 180	# radians
+		print("encoder info probs:", self.robot.sensor_state['distance'], self.robot.sensor_state['angle'])
+		deltadist = self.robot.sensor_state['distance'] / 1000  # meters
+		deltaang = self.robot.sensor_state['angle'] * math.pi / 180  # radians
 		u = [deltadist, deltaang]
 		# if in kalman filter mode, then use imu
 		# otherwise trash it cause imu is definitely not great
@@ -262,7 +255,7 @@ class Robot:
 
 	def loopComms(self):
 		snd = [self.curpos, self.gas]
-		print("send coordinates:",snd)
+		print("send coordinates:", snd)
 		# send curpos
 		encode.sendPacket(sock=self.sock, message=snd)
 
@@ -293,7 +286,7 @@ class Robot:
 	# change input velocities to v and theta
 	def tCoord(self):
 		self.veld = math.sqrt(self.desired[0] ** 2 + self.desired[1] ** 2)
-		print("input velocity being requested:",self.veld)
+		print("input velocity being requested:", self.veld)
 		if (self.desired[0] == 0 and self.desired[1] == 0):
 			self.thetad = self.curpos[2]
 		elif (self.desired[0] == 0 and self.desired[1] > 0):
@@ -307,7 +300,7 @@ class Robot:
 		else:
 			self.thetad = math.atan(self.desired[1] / self.desired[0])
 		sepd = 235
-		self.uTransform = sympy.Matrix([	# todo send this to Base
+		self.uTransform = sympy.Matrix([  # todo send this to Base
 			[self.deltat / 2, self.deltat / 2],
 			[self.deltat / sepd, -self.deltat / sepd]
 		])
@@ -323,39 +316,40 @@ class Robot:
 	# movement control
 	# decide turn or straight
 	def move(self):
-		if self.velr > self.vell and self.velr > self.vmax:	#todo move this to base Robot
+		if self.velr > self.vell and self.velr > self.vmax:  # todo move this to base Robot
 			self.vell /= self.velr / self.vmax
 			self.velr /= self.velr / self.vmax
 		elif self.vell > self.vmax:
 			self.velr /= self.vell / self.vmax
 			self.vell /= self.vell / self.vmax
 		print("Vr and Vl:", self.velr, self.vell)
-		self.robot.drive_direct(self.velr,self.vell)
-		# diff = math.tan((self.thetad - self.curpos[2]) / 2)
-		# if (diff < -Robot.ANGMARG):
+		self.robot.drive_direct(self.velr, self.vell)
 
-		# 	self.turnCW()
-		# elif (diff > Robot.ANGMARG):
-		# 	self.turnCCW()
-		# else:
-		# 	self.drive()
-		# 	return True
-		# return False
+	# diff = math.tan((self.thetad - self.curpos[2]) / 2)
+	# if (diff < -Robot.ANGMARG):
+
+	# 	self.turnCW()
+	# elif (diff > Robot.ANGMARG):
+	# 	self.turnCCW()
+	# else:
+	# 	self.drive()
+	# 	return True
+	# return False
 
 
 	# drive desired velocity
 	def drive(self):
-		self.robot.drive(self.veld, 32767)
+		self.robot.drive_direct(Robot.DRIVE_SPEED, Robot.DRIVE_SPEED)
 		return
 
 	# turn Counter Clockwise
 	def turnCCW(self):
-		self.robot.drive(-Robot.TURN_SPEED, 1)
+		self.robot.drive_direct(Robot.TURN_SPEED, -Robot.TURN_SPEED)
 		return
 
 	# turn Clockwise
 	def turnCW(self):
-		self.robot.drive(Robot.TURN_SPEED, -1)
+		self.robot.drive_direct(-Robot.TURN_SPEED, Robot.TURN_SPEED)
 		return
 
 	# end robot
@@ -405,7 +399,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--id", dest='id', type=int, help="assign ID to robot")
 parser.add_argument("--ip", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
 parser.add_argument("--mode", dest='mode', type=str, help="LKF, EKF, ENC", default="EKF")
-parser.add_argument("--usbport", dest='usbport', typ=int,help="switches usb port if needed: 0,1", default = 0)
+parser.add_argument("--usbport", dest='usbport', typ=str, help="switches usb port if needed: 0,1", default='0')
 args = parser.parse_args()
 robot = Robot(args.id, args.ip, args.mode, args.usbport)
 robot.main()
