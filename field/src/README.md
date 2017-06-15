@@ -35,7 +35,7 @@ sudo svn co https://svn.csail.mit.edu/apriltags
 ~~~~
 for more information on this repository please visit [here](http://people.csail.mit.edu/kaess/apriltags/)
 
-The way this library is installed allows for it to be used across the field and copter files. Unfortunately, this is not how it was originally designed. To remedy this just rename all #include AprilTags/{filename.h} instances to just #include {filename.h}.
+The way this library is installed allows for it to be used across the field and copter files. Unfortunately, this is not how it was originally designed. To remedy this just rename all instances of #include AprilTags/{filename.h} in the AprilTags library to just #include {filename.h}.  (Instances are found in: Edge.h, TagDetector.h, and TagFamily.h)
 
 ### Building the File
 

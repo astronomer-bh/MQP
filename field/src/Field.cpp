@@ -1,4 +1,5 @@
 #include "Field.hpp"
+#include <stdexcept>
 
 //inialize field
 Field::Field(int argc, char* argv[])
