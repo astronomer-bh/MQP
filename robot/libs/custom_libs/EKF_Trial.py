@@ -60,9 +60,9 @@ class RobotNavigationEKF:
 		delTheta = u[1]
 		#todo where does this matrix come from
 		Fu = sympy.Matrix([
-			[sympy.cos(theta + delTheta), 0, -delD*sympy.sin(theta + delTheta)],
-			[sympy.sin(theta + delTheta), 0, delD*sympy.cos(theta + delTheta)],
-			[1, 0, 0]
+			[sympy.cos(theta + delTheta),  -delD*sympy.sin(theta + delTheta)],
+			[sympy.sin(theta + delTheta),  delD*sympy.cos(theta + delTheta)],
+			[0, 1]
 		])
 		return Fu
 
@@ -93,7 +93,7 @@ class RobotNavigationEKF:
 		delTheta = u[1]
 		newX = sympy.Matrix([
 			[self.estX[0] + delD * sympy.cos(self.estX[2] + delTheta)],
-			[self.estX[1] + delD * sympy.cos(self.estX[2] + delTheta)],
+			[self.estX[1] + delD * sympy.sin(self.estX[2] + delTheta)],
 			[self.estX[2] + delTheta]
 		])
 		self.estX = newX
