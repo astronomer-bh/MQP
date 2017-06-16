@@ -7,17 +7,15 @@ from sympy import symbols, Matrix
 class RobotNavigationEKF:
 	def __init__(self, stdTheta, stdD, stdAD, stdAG):
 		# todo standard deviations of ??, probably measuremens or certainty in model
-		self.stdTheta = stdTheta
-		self.stdD = stdD
-		self.stdAD = stdAD
-		self.stdAG = stdAG
+		#setting matrices to identity
+		self.stdTheta = 1
+		self.stdD = 1
+		self.stdAD = 1
+		self.stdAG = 1
 
 		self.P = sympy.eye(3)
 		# todo what is M, and why is theta first?
-		self.M = sympy.Matrix([
-			[stdD ** 2, 0],
-			[0, stdTheta ** 2],
-		])
+
 		# Process error covariance matrix
 		self.R = sympy.Matrix([
 			[stdAD ** 2, 0, 0],
@@ -68,7 +66,12 @@ class RobotNavigationEKF:
 	# Process Noise Covariance Matrix
 	def procNoiseCovar(self, u):
 		Fu = self.stateTransUJacob(u)
-		Q = Fu * self.M * sympy.Matrix([1,u[1]]) * Fu.T	#todo transposing
+		thetaD = 1
+		self.M = sympy.Matrix([
+			[self.stdD ** 2, 0],
+			[0, thetaD*self.stdTheta ** 2],
+		])
+		Q = Fu * self.M* Fu.T	#todo transposing
 		return Q
 
 	# process error covariance matrix
