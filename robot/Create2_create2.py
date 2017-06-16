@@ -82,7 +82,7 @@ class Robot:
 		self.velr = 0
 		self.vell = 0
 		self.uTransform = sympy.Matrix([[0, 0], [0, 0]])
-		self.vmax = 150
+		self.vmax = 20
 
 		# time variables
 		self.startt = 0
@@ -219,6 +219,7 @@ class Robot:
 			gasses = list(np.array(self.gas) + np.array(gasses))
 			measurements += 1
 			curtime = time.time()
+		self.moveStop()	#to potentially get better readings from imu
 		gas_norm = list(np.array(gasses) / measurements)
 		gas_avg = sum(gas_norm) / 4
 		self.gas_offset[:] = [x - gas_avg for x in gas_norm]
@@ -284,7 +285,7 @@ class Robot:
 		return
 
 	# change input velocities to v and theta
-	def tCoord(self):
+	def tCoord(self):	# todo arcs not rotations
 		self.veld = math.sqrt(self.desired[0] ** 2 + self.desired[1] ** 2)
 		print("input velocity being requested:", self.veld)
 		if (self.desired[0] == 0 and self.desired[1] == 0):
@@ -351,6 +352,9 @@ class Robot:
 	def turnCW(self):
 		self.robot.drive_direct(-Robot.TURN_SPEED, Robot.TURN_SPEED)
 		return
+
+	def moveStop(self):
+		self.robot.drive_direct(0,0)
 
 	# end robot
 	def quits(self):  # TODO: does naming this quit mess with things?
