@@ -68,7 +68,7 @@ class RobotNavigationEKF:
 	# Process Noise Covariance Matrix
 	def procNoiseCovar(self, u):
 		Fu = self.stateTransUJacob(u)
-		Q = Fu * self.M * sympy.Matrix([[1],[u[1]]]) * Fu.T	#todo transposing
+		Q = Fu * self.M * sympy.Matrix([1,u[1]]) * Fu.T	#todo transposing
 		return Q
 
 	# process error covariance matrix
