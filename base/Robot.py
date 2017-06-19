@@ -96,6 +96,8 @@ class Robot:
 		elif (self.curtime < self.start + 10):
 			self.desired = [-Robot.SPEED * 0.5,
 							Robot.SPEED * 0]
+		else:
+			self.desired = [0,0]
 		# index = self.curgas.index(max(self.curgas))
 		# self.desired = [Robot.SPEED * math.cos(((math.pi / 2) * index) + self.curpos[2]),
 		# 				Robot.SPEED * math.sin(((math.pi / 2) * index) + self.curpos[2])]
