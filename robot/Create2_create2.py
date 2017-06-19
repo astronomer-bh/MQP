@@ -44,7 +44,7 @@ class Robot:
 	DRIVE_SPEED = 20
 	TURN_SPEED = 15
 	STOP = 0
-
+	CALI_TIME = 30
 	ANGMARG = .05
 
 	def __init__(self, id, ip, mode, usbport):
@@ -213,16 +213,20 @@ class Robot:
 		measurements = 0
 		gasses = [0, 0, 0, 0]
 		self.gas_offset = [0, 0, 0, 0]
-		while (curtime < start + 3):  # todo return to 60 following fixes
+		while (curtime < start + Robot.CALI_TIME):  # todo return to 60 following fixes
 			self.requestGas()
 			self.updateGas()
 			gasses = list(np.array(self.gas) + np.array(gasses))
+			print(gasses)
 			measurements += 1
 			curtime = time.time()
 		self.moveStop()	#to potentially get better readings from imu
 		gas_norm = list(np.array(gasses) / measurements)
+		print(gas_norm)
 		gas_avg = sum(gas_norm) / 4
+		print(gas_avg)
 		self.gas_offset[:] = [x - gas_avg for x in gas_norm]
+		print(self.gas_offset)
 		return
 
 	# tell teensy to grab gas info
@@ -286,28 +290,16 @@ class Robot:
 
 	# change input velocities to v and theta
 	def tCoord(self):	# todo arcs not rotations
-		self.veld = math.sqrt(self.desired[0] ** 2 + self.desired[1] ** 2)
-		print("input velocity being requested:", self.veld)
 		if (self.desired[0] == 0 and self.desired[1] == 0):
 			self.thetad = self.curpos[2]
 		elif (self.desired[0] == 0 and self.desired[1] > 0):
 			self.thetad = math.pi / (2)
 		elif (self.desired[0] == 0 and self.desired[1] < 0):
 			self.thetad = math.pi / (-2)
-		# elif (self.desired[0] > 0):
-		# 	self.thetad = math.atan(self.desired[1] / self.desired[0])
-		# elif (self.desired[0] < 0):
-		# 	self.thetad = math.pi + math.atan(self.desired[1] / self.desired[0])
-		else:
+		elif (self.desired[0] > 0):
 			self.thetad = math.atan(self.desired[1] / self.desired[0])
-		sepd = 235
-		self.uTransform = sympy.Matrix([  # todo send this to Base
-			[self.deltat / 2, self.deltat / 2],
-			[self.deltat / sepd, -self.deltat / sepd]
-		])
-
-		[self.velr, self.vell] = self.uTransform.inv() * sympy.Matrix([self.veld, self.thetad])
-
+		elif (self.desired[0] < 0):
+			self.thetad = math.pi + math.atan(self.desired[1] / self.desired[0])
 		return
 
 	###################
@@ -317,6 +309,16 @@ class Robot:
 	# movement control
 	# decide turn or straight
 	def move(self):
+		diff = math.tan((self.thetad - self.curpos[2]) / 2)
+		sepd = 235
+		self.uTransform = sympy.Matrix([  # todo send this to Base
+			[1 / 2, 1 / 2],
+			[1 / sepd, -1 / sepd]
+		])
+		print("velocities before and after transform",sympy.Matrix([self.veld, diff]))
+		[self.velr, self.vell] = self.uTransform.inv() * sympy.Matrix([self.veld, diff])
+		print(self.velr,self.vell)
+
 		if self.velr > self.vell and self.velr > self.vmax:  # todo move this to base Robot
 			self.vell /= self.velr / self.vmax
 			self.velr /= self.velr / self.vmax

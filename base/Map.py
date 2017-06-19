@@ -90,6 +90,6 @@ class Map:
 			self.win.update()
 		return
 
-	def savefile(self, filename):
+	def savefile(self, filename):	#todo get this to work
 		f = filename
 		save(f)

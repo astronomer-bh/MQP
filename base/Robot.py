@@ -20,6 +20,7 @@ import sys
 import pickle
 import threading
 import math
+import time
 
 import Gas
 import Map
@@ -50,6 +51,7 @@ class Robot:
 		self.map = Map.Map(id)
 
 	def comm(self):
+
 		if self.keepRunning:
 			# recieve posn
 			[self.curpos, self.curgas] = encode.recievePacket(sock=self.conn)
@@ -61,6 +63,7 @@ class Robot:
 
 			# send desired velocities
 			encode.sendPacket(sock=self.conn, message=self.desired)
+			print("desired v sent", self.desired)
 		else:
 			# send out packet
 			encode.sendPacket(sock=self.conn, message="out")
@@ -84,9 +87,22 @@ class Robot:
 	# determine highest of the gas concentrations
 	# and change desired to that direction
 	def findV(self):
-		index = self.curgas.index(max(self.curgas))
-		self.desired = [Robot.SPEED * math.cos(((math.pi / 2) * index) + self.curpos[2]),
-						Robot.SPEED * math.sin(((math.pi / 2) * index) + self.curpos[2])]
+		self.curtime = time.time()
+
+		if (self.curtime < self.start +5 ):
+			self.desired = [Robot.SPEED * 6,
+							Robot.SPEED * 0]
+
+		elif (self.curtime < self.start + 10):
+			self.desired = [-Robot.SPEED * 0.5,
+							Robot.SPEED * 0]
+		# index = self.curgas.index(max(self.curgas))
+		# self.desired = [Robot.SPEED * math.cos(((math.pi / 2) * index) + self.curpos[2]),
+		# 				Robot.SPEED * math.sin(((math.pi / 2) * index) + self.curpos[2])]
+		print("start time", self.start)
+		print("current time", self.curtime)
+		print(self.curtime < self.start + 5)
+		print(self.curtime < self.start + 10)
 
 	# update robot drawing
 	def draw(self):
@@ -97,6 +113,9 @@ class Robot:
 	# then have it last so the exit call doesn't mess up the other funcs
 	def run(self):
 		self.comm()
+		self.start = time.time()
+		self.curtime = self.start
+
 		while self.keepRunning:
 			self.findV()
 			self.draw()
