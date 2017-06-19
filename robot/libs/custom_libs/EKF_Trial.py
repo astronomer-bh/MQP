@@ -121,7 +121,8 @@ class RobotNavigationEKF:
 		K = self.P * Hjacobian.T * S.inv()
 		print("kalman gain:", K)
 		#update P
-		self.P = self.P - K * S * K.T #todo transposing (old K.transpose())
+		self.P = self.P - K * S * K.T #todo transposing (old K.transpose()), I think this is wrong
+		#self.P = (1-K*Hjacobian)*self.P
 		print("new P matrix:", self.P)
 		self.updateEstX(u)
 		h = self.expectedZfcn(dt)
