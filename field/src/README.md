@@ -30,16 +30,16 @@ If this does not work or a specific dependency fails you may have to look up the
 ### Apriltag Library Instructions
 IMPORTANT: Currently the Apriltag library is included in the src file.  That means that the following steps are not necessary.  They are probably a better way to implament apriltag tracking in the future, so they are left here as legacy details
 
-~~
-To install the AprilTags library move to the lib directory and then pull it from MIT's C++ repository:
+
+~~To install the AprilTags library move to the lib directory and then pull it from MIT's C++ repository:~~
 ~~~~
 cd /usr/include
 sudo svn co https://svn.csail.mit.edu/apriltags
 ~~~~
-for more information on this repository please visit [here](http://people.csail.mit.edu/kaess/apriltags/)
+~~for more information on this repository please visit [here](http://people.csail.mit.edu/kaess/apriltags/)~~
 
-The way this library is installed allows for it to be used across the field and copter files. Unfortunately, this is not how it was originally designed. To remedy this just rename all instances of #include AprilTags/{filename.h} in the AprilTags library to just #include {filename.h}.  (Instances are found in: Edge.h, TagDetector.h, and TagFamily.h)
-~~
+~~The way this library is installed allows for it to be used across the field and copter files. Unfortunately, this is not how it was originally designed. To remedy this just rename all instances of #include AprilTags/{filename.h} in the AprilTags library to just #include {filename.h}.  (Instances are found in: Edge.h, TagDetector.h, and TagFamily.h)~~
+
 ### Building the File
 Navigate to the field directory using the `cd ` command.  Once there, you will need to create, and navigate to, a build directory using
 ```
