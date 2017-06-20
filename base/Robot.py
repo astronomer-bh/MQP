@@ -87,7 +87,7 @@ class Robot:
 
 	# determine highest of the gas concentrations
 	# and change desired to that direction
-	def findV(self):
+	def findV(self):	# todo change back for proper pathing
 		self.index = self.curgas.index(max(self.curgas))
 		# self.desired = [Robot.SPEED * math.cos(((math.pi / 2) * self.index) + self.curpos[2]),
 		# 				Robot.SPEED * math.sin(((math.pi / 2) * self.index) + self.curpos[2])]

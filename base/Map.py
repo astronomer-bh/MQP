@@ -90,7 +90,7 @@ class Map:
 			self.win.update()
 		return
 
-	def savefile(self, filename, map):	#todo get this to work
+	def savefile(self, filename, map):	#todo does this work
 		f = filename
 		s = Image(map)
 		s.save(f)

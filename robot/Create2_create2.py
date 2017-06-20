@@ -347,7 +347,7 @@ class Robot:
 	# 	return True
 	# return False
 
-	def iMove(self):
+	def iMove(self):	# takes gas index and paths accordingly, done this way due to wierd issues with v/theta conversion
 		sepd = 235
 		if self.gasindex == 0:
 			self.velr = Robot.DRIVE_SPEED
