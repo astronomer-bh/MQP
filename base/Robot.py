@@ -54,6 +54,7 @@ class Robot:
 
 		if self.keepRunning:
 			# recieve posn
+			print("Gnona recieve")
 			[self.curpos, self.curgas] = encode.recievePacket(sock=self.conn)
 
 			# print x,y,theta,velocity
@@ -62,7 +63,7 @@ class Robot:
 			self.addGas()
 
 			# send desired velocities
-			encode.sendPacket(sock=self.conn, message=self.desired)
+			encode.sendPacket(sock=self.conn, message=[self.desired,self.index])
 			print("desired v sent", self.desired)
 		else:
 			# send out packet
@@ -86,21 +87,21 @@ class Robot:
 
 	# determine highest of the gas concentrations
 	# and change desired to that direction
-	def findV(self):
+	def findV(self):	# todo change back for proper pathing
+		self.index = self.curgas.index(max(self.curgas))
+		# self.desired = [Robot.SPEED * math.cos(((math.pi / 2) * self.index) + self.curpos[2]),
+		# 				Robot.SPEED * math.sin(((math.pi / 2) * self.index) + self.curpos[2])]
+
 		self.curtime = time.time()
-
-		if (self.curtime < self.start +5 ):
-			self.desired = [Robot.SPEED * 6,
-							Robot.SPEED * 0]
-
-		elif (self.curtime < self.start + 10):
-			self.desired = [-Robot.SPEED * 0.5,
-							Robot.SPEED * 0]
-		else:
+		if (self.curtime < self.start +20 ):
+			self.desired = [Robot.SPEED * 3,
+							Robot.SPEED * 3]
+		elif (self.curtime < self.start + 40):
+			self.desired = [Robot.SPEED * -3,
+							Robot.SPEED * -3]
+		elif (self.curtime > self.start + 40):
 			self.desired = [0,0]
-		# index = self.curgas.index(max(self.curgas))
-		# self.desired = [Robot.SPEED * math.cos(((math.pi / 2) * index) + self.curpos[2]),
-		# 				Robot.SPEED * math.sin(((math.pi / 2) * index) + self.curpos[2])]
+
 		print("start time", self.start)
 		print("current time", self.curtime)
 		print(self.curtime < self.start + 5)
@@ -109,7 +110,7 @@ class Robot:
 	# update robot drawing
 	def draw(self):
 		self.map.updateRobot(self)
-		# self.map.updateGas()
+		self.map.updateGas()
 
 	# run comm once at first to get initial readings
 	# then have it last so the exit call doesn't mess up the other funcs
@@ -124,7 +125,7 @@ class Robot:
 			self.comm()
 
 	def terminate(self):
-		map.savefile("GasMap.gif")  # added to save map as file, need to confirm this works as planned
+		Map.savefile("GasMap.gif", self.map)  # added to save map as file, need to confirm this works as planned
 		self.keepRunning = False
 
 	###################

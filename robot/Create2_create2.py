@@ -44,7 +44,7 @@ class Robot:
 	DRIVE_SPEED = 20
 	TURN_SPEED = 15
 	STOP = 0
-	CALI_TIME = 30
+	CALI_TIME = 5
 	ANGMARG = .05
 
 	def __init__(self, id, ip, mode, usbport):
@@ -105,6 +105,7 @@ class Robot:
 		self.tnsy = serial.Serial(self.TNSY_SERIAL_PORT, self.TNSY_BAUD_RATE)
 
 		# calibrate the COZIR sensors
+		self.gas_offset = [0,0,0,0]
 		self.calibrate()  # print stayements of readout.  Also when should calibration start, change gas graph readout, add dircetion
 
 		# decide if only using encoders and which kalman filter
@@ -207,7 +208,8 @@ class Robot:
 
 	# COZIR calibration
 	def calibrate(self):
-		self.turnCCW()
+		print("not calibrating, for direct")
+		# self.turnCCW()
 		start = time.time()
 		curtime = start
 		measurements = 0
@@ -278,7 +280,7 @@ class Robot:
 		else:
 			self.desired[0] = rcv[0]
 			self.desired[1] = rcv[1]
-
+			self.gasindex = rcv[2]
 		return
 
 	def terminateComms(self):
@@ -290,6 +292,7 @@ class Robot:
 
 	# change input velocities to v and theta
 	def tCoord(self):	# todo arcs not rotations
+		self.veld = math.sqrt(self.desired[0] ** 2 + self.desired[1] ** 2)
 		if (self.desired[0] == 0 and self.desired[1] == 0):
 			self.thetad = self.curpos[2]
 		elif (self.desired[0] == 0 and self.desired[1] > 0):
@@ -326,6 +329,11 @@ class Robot:
 			self.velr /= self.vell / self.vmax
 			self.vell /= self.vell / self.vmax
 		print("Vr and Vl:", self.velr, self.vell)
+
+		print("using direct control, ignoring calctatued values")
+		self.velr = self.desired[0]
+		self.vell = self.desired[1]
+
 		self.robot.drive_direct(self.velr, self.vell)
 
 	# diff = math.tan((self.thetad - self.curpos[2]) / 2)
@@ -339,6 +347,20 @@ class Robot:
 	# 	return True
 	# return False
 
+	def iMove(self):	# takes gas index and paths accordingly, done this way due to wierd issues with v/theta conversion
+		sepd = 235
+		if self.gasindex == 0:
+			self.velr = Robot.DRIVE_SPEED
+			self.vell = Robot.DRIVE_SPEED
+		elif self.gasindex == 1:
+			self.velr = Robot.TURN_SPEED + sepd * math.pi/(2*self.deltat)  # may not need deltat
+			self.vell = Robot.TURN_SPEED - sepd * math.pi/(2*self.deltat)
+		elif self.gasindex == 2:
+			self.velr = Robot.TURN_SPEED
+			self.vell = -Robot.TURN_SPEED
+		elif self.gasindex == 3:
+			self.velr = Robot.TURN_SPEED - sepd * math.pi/(2*self.deltat)
+			self.vell = Robot.TURN_SPEED + sepd * math.pi /(2*self.deltat)  # may not need deltat
 
 	# drive desired velocity
 	def drive(self):
