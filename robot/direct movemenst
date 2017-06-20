@@ -1,0 +1,77 @@
+"square"
+		if (self.curtime < self.start +10 ):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * 5
+			self.desired[1] = Robot.SPEED * 5
+		elif (self.curtime < self.start + 13.2):
+			self.desired[0] = Robot.SPEED * -5
+			self.desired[1] = Robot.SPEED * 5
+		elif (self.curtime < self.start + 23.2):
+			self.desired[0] = Robot.SPEED * 5
+			self.desired[1] = Robot.SPEED * 5
+		elif (self.curtime < self.start + 26.4):
+			self.desired[0] = Robot.SPEED * -5
+			self.desired[1] = Robot.SPEED * 5
+		elif (self.curtime < self.start + 36.4):
+			self.desired[0] = Robot.SPEED * 5
+			self.desired[1] = Robot.SPEED * 5
+		elif (self.curtime < self.start + 39.6):
+			self.desired[0] = Robot.SPEED * -5
+			self.desired[1] = Robot.SPEED * 5
+		elif (self.curtime < self.start + 49.6):
+			self.desired[0] = Robot.SPEED * 5
+			self.desired[1] = Robot.SPEED * 5
+
+"rotate twice both ways"
+		if (self.curtime < self.start +2.5 ):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * 3
+			self.desired[1] = Robot.SPEED * 3
+		elif (self.curtime < self.start +5 ):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * -3
+			self.desired[1] = Robot.SPEED * -3
+		elif (self.curtime < self.start +5+6.40):
+			self.desired[0] = Robot.SPEED * 5
+			self.desired[1] = Robot.SPEED * -5
+		elif (self.curtime < self.start +  5+6.40+5):
+			self.desired[0] = Robot.SPEED * 0
+			self.desired[1] = Robot.SPEED * 0
+		elif (self.curtime < self.start +  5+6.40+5+6.40):
+			self.desired[0] = Robot.SPEED * 5
+			self.desired[1] = Robot.SPEED * -5
+		elif (self.curtime < self.start +  5+6.40+5+6.40+5):
+			self.desired[0] = Robot.SPEED * 0
+			self.desired[1] = Robot.SPEED * 0
+		elif (self.curtime < self.start +  5+6.40+5+6.40+5+6.40):
+			self.desired[0] = Robot.SPEED * -5
+			self.desired[1] = Robot.SPEED * 5
+		elif (self.curtime < self.start +  5+6.40+5+6.40+5+6.40+5):
+			self.desired[0] = Robot.SPEED * 0
+			self.desired[1] = Robot.SPEED * 0
+		elif (self.curtime < self.start +  5+6.40+5+6.40+5+6.40+5+6.40):
+			self.desired[0] = Robot.SPEED * -5
+			self.desired[1] = Robot.SPEED * 5
+
+"rotation speeds test" - slower = better
+		if (self.curtime < self.start +2.5 ):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * 3
+			self.desired[1] = Robot.SPEED * 3
+		elif (self.curtime < self.start +5 ):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * -3
+			self.desired[1] = Robot.SPEED * -3
+		elif (self.curtime < self.start +5 +3):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * 0
+			self.desired[1] = Robot.SPEED * 0
+		elif (self.curtime < self.start +5+3+6.15):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * -3
+			self.desired[1] = Robot.SPEED * 3
+		elif (self.curtime < self.start +5+3+6.15+3):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * 0
+			self.desired[1] = Robot.SPEED * 0
+		elif (self.curtime < self.start +5+3+6.15+3+3.69 ):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * -5
+			self.desired[1] = Robot.SPEED * 5
+		elif (self.curtime < self.start +5+3+6.15+3+3.69+3 ):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * 0
+			self.desired[1] = Robot.SPEED * 0
+		elif (self.curtime < self.start +5+3+6.15+3+3.69+3+2.636):	#90degrees at 3.2 seconds for 5*10 speed
+			self.desired[0] = Robot.SPEED * -7
+			self.desired[1] = Robot.SPEED * 7

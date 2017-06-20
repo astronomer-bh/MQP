@@ -98,7 +98,8 @@ class Robot:
 		self.robot = _Create2(self.ROBOT_SERIAL_PORT, self.ROBOT_BAUD_RATE)
 		self.robot.start()
 		self.robot.safe()
-
+		self.robot.get_packet(3)
+		print(self.robot.sensor_state['distance'] )
 		self.robot.play_note('A4', 20)  # say hi!
 
 		# open connection to teensy
@@ -153,6 +154,7 @@ class Robot:
 			print('See datasheet section 4.3.59 for the meaning.')
 
 		self.zeroIMU()
+
 		return
 
 	def zeroIMU(self):
@@ -347,7 +349,7 @@ class Robot:
 	# 	return True
 	# return False
 
-	def iMove(self):	# takes gas index and paths accordingly, done this way due to wierd issues with v/theta conversion
+	def imove(self):	# takes gas index and paths accordingly, done this way due to wierd issues with v/theta conversion
 		sepd = 235
 		if self.gasindex == 0:
 			self.velr = Robot.DRIVE_SPEED
@@ -361,6 +363,15 @@ class Robot:
 		elif self.gasindex == 3:
 			self.velr = Robot.TURN_SPEED - sepd * math.pi/(2*self.deltat)
 			self.vell = Robot.TURN_SPEED + sepd * math.pi /(2*self.deltat)  # may not need deltat
+		print("wheel speed:", self.velr, self.vell)
+		if self.velr > self.vell and self.velr > self.vmax:  # todo move this to base Robot
+			self.vell /= self.velr / self.vmax
+			self.velr /= self.velr / self.vmax
+		elif self.vell > self.vmax:
+			self.velr /= self.vell / self.vmax
+			self.vell /= self.vell / self.vmax
+		print("wheel speed corrected:", self.velr, self.vell)
+		self.robot.drive_direct(self.velr, self.vell)
 
 	# drive desired velocity
 	def drive(self):
