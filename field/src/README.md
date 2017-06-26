@@ -63,4 +63,5 @@ Quit it by pressing `^C` (Control + C)
 
 
 ## Runtime Options
-TODO:
+Alright, this is kinda a lie.  This is totally a pre-runtime option that really should be a runtime option, but I don't know enough about C++ / have enough time to do it properly.  Anyway, if you need to change the camera used by the program, (i.e. from a built in webcam to a USB camera) change the number 'm_deviceID' in cam.cpp.  (You'll need to re-bulid the executable).
+TODO: Make this actually a runtime option...
