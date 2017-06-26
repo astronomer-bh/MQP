@@ -165,6 +165,7 @@ class Robot:
 
 	# update loacization sensors
 	def updatePosn(self):
+
 		# update time change
 		self.endt = time.time()
 		self.deltat = self.endt - self.startt
@@ -173,11 +174,30 @@ class Robot:
 		# calculate encoder bits (mm & rad)
 		print("getting encoder stuffs")
 		# get distance and angle readings
-		self.robot.get_packet(19)
-		self.robot.get_packet(20)
-		print("encoder info probs:", self.robot.sensor_state['distance'], self.robot.sensor_state['angle'])
+		self.robot.get_packet(19)	#distance
+		self.robot.get_packet(20)	#theta
+		#self.robot.get_packet(41)	#right velocity
+		#self.robot.get_packet(42)	#left velocity
+
+		print("encoder info:", self.robot.sensor_state['distance'], self.robot.sensor_state['angle'])
+
 		deltadist = self.robot.sensor_state['distance'] / 1000  # meters
 		deltaang = self.robot.sensor_state['angle'] * math.pi / 180  # radians
+		print("encoder u:", deltadist, deltaang)
+
+		#requestedVRraw = self.robot.sensor_state['requested right velocity']
+		#requestedVLraw = self.robot.sensor_state['requested left velocity']
+		#print("velocitys pulled unmod:", requestedVRraw, requestedVLraw)
+
+		#requestedVR = requestedVRraw/1000
+		#requestedVL = requestedVLraw /1000
+		#print("velocitys pulled / 1000:", requestedVR, requestedVL)
+
+		#deltadist = (requestedVR + requestedVL) * self.deltat / 2
+		#deltaang = (requestedVR - requestedVL)*self.deltat/235 #235 = wheel sepeartion distances in mm
+		#print("time:", self.deltat)
+		#print("velocity u:", deltadist, deltaang)
+
 		u = [deltadist, deltaang]
 		# if in kalman filter mode, then use imu
 		# otherwise trash it cause imu is definitely not great

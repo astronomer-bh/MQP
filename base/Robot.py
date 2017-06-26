@@ -31,17 +31,18 @@ from libs.custom_libs import encoding_TCP as encode
 
 class Robot:
 	# max robot speed
-	SPEED = 15
+	SPEED = 38
 	# arm length
 	ARM_D = .25
 
 	def __init__(self, id, conn):
 		self.id = id
+		self.index = 0
 		self.keepRunning = True
 
 		# position initialization
 		self.curpos = [0, 0, 0]
-		self.desired = [0, 0]
+		self.desired = [0, 0, 0]
 
 		self.curgas = []
 		self.gasses = []
@@ -49,6 +50,12 @@ class Robot:
 		self.conn = conn
 
 		self.map = Map.Map(id)
+		filetime = time.time()
+		self.filename = "Kalman Filter - %s.csv" %filetime
+		self.file = open(self.filename, "w")
+		self.file.write("Kalman Filter: x -m,y -m,theta -rad,time -s \n")
+		print(self.filename)
+		print("file should be made")
 
 	def comm(self):
 
@@ -63,7 +70,8 @@ class Robot:
 			self.addGas()
 
 			# send desired velocities
-			encode.sendPacket(sock=self.conn, message=[self.desired,self.index])
+			self.desired[2] = self.index
+			encode.sendPacket(sock=self.conn, message=self.desired)
 			print("desired v sent", self.desired)
 		else:
 			# send out packet
@@ -93,14 +101,13 @@ class Robot:
 		# 				Robot.SPEED * math.sin(((math.pi / 2) * self.index) + self.curpos[2])]
 
 		self.curtime = time.time()
-		if (self.curtime < self.start +20 ):
-			self.desired = [Robot.SPEED * 3,
-							Robot.SPEED * 3]
-		elif (self.curtime < self.start + 40):
-			self.desired = [Robot.SPEED * -3,
-							Robot.SPEED * -3]
-		elif (self.curtime > self.start + 40):
-			self.desired = [0,0]
+
+		if (self.curtime < self.start +12.907):  #180degrees is 9.714 for 38, or 12.907 for what 38 did yesterday
+			self.desired[0] = Robot.SPEED * 1 #cw = -1
+			self.desired[1] = Robot.SPEED * -1  #ccw = -1
+		else:
+			self.desired[0] = 0
+			self.desired[1] = 0
 
 		print("start time", self.start)
 		print("current time", self.curtime)
@@ -111,6 +118,11 @@ class Robot:
 	def draw(self):
 		self.map.updateRobot(self)
 		self.map.updateGas()
+
+	def fileWrite(self):
+
+		f = "%s \n" %[self.curpos,self.curtime]
+		self.file.write(f)
 
 	# run comm once at first to get initial readings
 	# then have it last so the exit call doesn't mess up the other funcs
@@ -123,7 +135,7 @@ class Robot:
 			self.findV()
 			self.draw()
 			self.comm()
-
+			self.fileWrite()
 	def terminate(self):
 		Map.savefile("GasMap.gif", self.map)  # added to save map as file, need to confirm this works as planned
 		self.keepRunning = False
