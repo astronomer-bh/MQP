@@ -104,7 +104,7 @@ class Robot:
 
 		# open connection to teensy
 		self.tnsy = serial.Serial(self.TNSY_SERIAL_PORT, self.TNSY_BAUD_RATE)
-
+		time.sleep(1)
 		# calibrate the COZIR sensors
 		self.gas_offset = [0,0,0,0]
 		self.calibrate()  # print stayements of readout.  Also when should calibration start, change gas graph readout, add dircetion
@@ -139,7 +139,7 @@ class Robot:
 	def initIMU(self):
 		# open connection to imu (BNO055)
 		self.bno = BNO055.BNO055(serial_port=self.IMU_SERIAL_PORT, rst=self.IMU_GPIO_PIN)
-
+		time.sleep(1)
 		# Initialize the BNO055 and stop if something went wrong.
 		if not self.bno.begin():
 			raise RuntimeError('Failed to initialize BNO055! Is the sensor connected?')
