@@ -14,15 +14,14 @@
 Field::Field(int argc, char* argv[])
 : m_cam(argc, argv)
 {
-  parseOptions(argc, argv);
+  parseOptions(argc, argv);  // Note that camera-related options are parsed in Cam.cpp
 }
 
 // Opens the socket to send info to the Python code
 void Field::startSocket(MQPIf mqpif){
   std::cout << "starting socket" << std::endl;
 
-  extern char *optarg;
-  int c;
+  extern char *optarg;  // this is the argument pointer thingie
   char host[256];
   int port = 9999;
   std::strcpy(host, "localhost");  //strcpy == string copy -BH
@@ -42,6 +41,7 @@ void Field::startSocket(MQPIf mqpif){
 // TODO: FANCY CAMERA THINGS
 // eg. change camera size, set max robots?
 void Field::parseOptions(int argc, char* argv[]) {
+
 }
 
 // checks cam for apriltag locations

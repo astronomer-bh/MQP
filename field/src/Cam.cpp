@@ -32,7 +32,7 @@ m_brightness(-1),
 
 hasDetections(false),
 
-m_deviceId(1)
+m_deviceId(0)
 {
   parseOptions(argc, argv);
   m_tagDetector = new AprilTags::TagDetector(m_tagCodes);
@@ -46,7 +46,13 @@ m_deviceId(1)
 
 // set fancy camera things
 void Cam::parseOptions(int argc, char* argv[]){
-
+  int c;
+  while ((c = getopt(argc, argv, "c:")) != -1) {
+    switch (c) {
+      case 'c' : m_deviceId = atoi(optarg);    break;
+      default : std::cout << "error from flags" << std::endl;   break;
+    }
+  }
 }
 
 // changing the tag family
