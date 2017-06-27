@@ -33,5 +33,5 @@ include_directories(${CMAKE_SOURCE_DIR}/apriltags)
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-add_executable(field Field.cpp Cam.cpp Robot.cpp Pose.cpp)
+add_executable(field Field.cpp Cam.cpp Robot.cpp Pose.cpp mqpif.cpp)
 target_link_libraries(field apriltags ${OpenCV_LIBS}) #-pg) #-fopenmp)

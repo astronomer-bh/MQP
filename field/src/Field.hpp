@@ -2,6 +2,7 @@
 
 #include "Cam.hpp"
 #include "Robot.hpp"
+#include "mqpif.h"
 
 #include <algorithm>
 
@@ -11,10 +12,11 @@ private:
   std::map<int,Robot> m_robots;
 
   void parseOptions(int argc, char* argv[]);
-  void updateRobots();
+  void updateRobots();//DELME
 public:
+  void startSocket();//DELME
   Field(int argc, char* argv[]);
-  void loop();
+  void loop();//DELME
 };
 
 #endif
