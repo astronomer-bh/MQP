@@ -103,8 +103,8 @@ class Robot:
 		self.robot.play_note('A4', 20)  # say hi!
 
 		# open connection to teensy
-		self.tnsy = serial.Serial(self.TNSY_SERIAL_PORT, self.TNSY_BAUD_RATE)
 		time.sleep(1)
+		self.tnsy = serial.Serial(self.TNSY_SERIAL_PORT, self.TNSY_BAUD_RATE)
 		# calibrate the COZIR sensors
 		self.gas_offset = [0,0,0,0]
 		self.calibrate()  # print stayements of readout.  Also when should calibration start, change gas graph readout, add dircetion
