@@ -1,5 +1,14 @@
 #include "Field.hpp"
+#include "mqpif.h"
+
 #include <stdexcept>
+// Includes below this line added to support socket -BH
+#include <iostream>
+#include <getopt.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <sstream>
+#include <cstring>
 
 //inialize field
 Field::Field(int argc, char* argv[])
@@ -7,6 +16,27 @@ Field::Field(int argc, char* argv[])
 {
   parseOptions(argc, argv);
 }
+
+// Opens the socket to send info to the Python code
+void Field::startSocket(MQPIf mqpif){
+  std::cout << "starting socket" << std::endl;
+
+  extern char *optarg;
+  int c;
+  char host[256];
+  int port = 9999;
+  std::strcpy(host, "localhost");  //strcpy == string copy -BH
+  try{
+    mqpif.connect(host, port);
+  }
+  catch (const char *n_err) {
+    std::cout << *n_err << std::endl;  // This might not work (supposed to print the error message taken from mqpif.cpp) -BH
+  }
+  catch (...) {
+    std::cout << "internal error" << std::endl;
+  }
+}
+
 
 // parse command line options to change default behavior
 // TODO: FANCY CAMERA THINGS
@@ -17,7 +47,7 @@ void Field::parseOptions(int argc, char* argv[]) {
 // checks cam for apriltag locations
 // updates robots with id corresponding to current apriltag IDs
 // creates robots if robot list does not have robot with ID needed
-void Field::updateRobots(){
+void Field::updateRobots(MQPIf mqpif){
   for (unsigned int i = 0; i < m_cam.getTags().size(); i++){
     AprilTags::TagDetection curTag = m_cam.getTags()[i];
     int tagID = curTag.id;
@@ -40,30 +70,44 @@ void Field::updateRobots(){
     }
 
     try {
-      m_robots.at(tagID).printID();
-      m_robots.at(tagID).printPose();
+      std::stringstream ss;
+      ss << m_robots.at(tagID).getPose().x() << ',';
+      ss << m_robots.at(tagID).getPose().y() << ',';
+      ss << m_robots.at(tagID).getPose().z() << ',';
+      ss << m_robots.at(tagID).getPose().yaw() << ',';
+      ss << m_robots.at(tagID).getPose().ptc() << ',';
+      ss << m_robots.at(tagID).getPose().rol();
+      std::string str = ss.str();
+
+      mqpif.sendOne(str.c_str(), str.length());
+      //m_robots.at(tagID).printID();  // These printed the data to the console -BH
+      //m_robots.at(tagID).printPose();
     } catch (std::out_of_range&) {
       std::cout << "Robot " << tagID << " was not correctly added to list" << endl;
+    } catch (...) {
+      std::cout << "Error sending Robot" << tagID << std::endl;
     }
   }
 }
 
 // updates camera and apriltag locations
 // then updates robot positions based on the new info
-void Field::loop(){
+void Field::loop(MQPIf mqpif){
   m_cam.loop();
-  updateRobots();
+  updateRobots(mqpif);
 }
 
 // here is were everything begins
 // creates field with optional args
 // loops through field
 int main(int argc, char* argv[]) {
+  static MQPIf mqpif;
   Field field(argc, argv);
-
+  field.startSocket(mqpif);  // TODO: is there a better way to handle this mqpif object? -BH
   while(true){
     // the actual processing loop where tags are detected and visualized
-    field.loop();
+    field.loop(mqpif);
+    // BH-TODO: Add the communication code here??
   }
 
   return 0;

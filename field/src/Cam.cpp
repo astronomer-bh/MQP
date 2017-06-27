@@ -32,7 +32,7 @@ m_brightness(-1),
 
 hasDetections(false),
 
-m_deviceId(0)
+m_deviceId(1)
 {
   parseOptions(argc, argv);
   m_tagDetector = new AprilTags::TagDetector(m_tagCodes);
