@@ -46,6 +46,8 @@ class Robot:
 
 		self.curgas = []
 		self.gasses = []
+		self.curposAT = []
+		self.curangAT = []
 
 		self.conn = conn
 
@@ -61,7 +63,6 @@ class Robot:
 
 		if self.keepRunning:
 			# recieve posn
-			print("Gnona recieve")
 			[self.curpos, self.curgas] = encode.recievePacket(sock=self.conn)
 
 			# print x,y,theta,velocity
@@ -102,8 +103,11 @@ class Robot:
 
 		self.curtime = time.time()
 
-		if (self.curtime < self.start +12.907):  #180degrees is 9.714 for 38, or 12.907 for what 38 did yesterday
-			self.desired[0] = Robot.SPEED * 1 #cw = -1
+		if (self.curtime < self.start +7):  #180degrees is 9.714 for 38, or 12.907 for what 38 did yesterday
+			self.desired[0] = Robot.SPEED * 1.05 #cw = -1
+			self.desired[1] = Robot.SPEED * 1  #ccw = -1
+		elif (self.curtime < self.start +14):  #180degrees is 9.714 for 38, or 12.907 for what 38 did yesterday
+			self.desired[0] = Robot.SPEED * -1.05 #cw = -1
 			self.desired[1] = Robot.SPEED * -1  #ccw = -1
 		else:
 			self.desired[0] = 0
@@ -124,6 +128,11 @@ class Robot:
 		f = "%s \n" %[self.curpos,self.curtime]
 		self.file.write(f)
 
+	def aprilTag(self):
+		tagpackt = apriltag.tag[self.id]	#apriltag file/thread saves data from each tag ID to a dictionary in the id position
+		self.curposAT = [tagpackt[i] for i in (1,2,3)]
+		self.curangAT = [tagpackt[i] for i in (4,5,6)]
+
 	# run comm once at first to get initial readings
 	# then have it last so the exit call doesn't mess up the other funcs
 	def run(self):
@@ -134,6 +143,7 @@ class Robot:
 		while self.keepRunning:
 			self.findV()
 			self.draw()
+			self.aprilTag # new data to be analyzed with comms, can send back almost immeditely as well
 			self.comm()
 			self.fileWrite()
 	def terminate(self):
