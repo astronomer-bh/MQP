@@ -12,11 +12,11 @@ private:
   std::map<int,Robot> m_robots;
 
   void parseOptions(int argc, char* argv[]);
-  void updateRobots();//DELME
+  void updateRobots();
 public:
-  void startSocket();//DELME
+  void startSocket();
   Field(int argc, char* argv[]);
-  void loop();//DELME
+  void loop();
 };
 
 #endif

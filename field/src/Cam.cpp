@@ -47,9 +47,18 @@ m_deviceId(0)
 // set fancy camera things
 void Cam::parseOptions(int argc, char* argv[]){
   int c;
-  while ((c = getopt(argc, argv, "c:")) != -1) {
+  while ((c = getopt(argc, argv, "c:hv")) != -1) {
     switch (c) {
       case 'c' : m_deviceId = atoi(optarg);    break;
+      case 'v' : m_draw = false;    break;
+      case 'h' : std::cout << std::endl
+                           <<"This is the slightly helpful help file!" << std::endl
+                           << "Flags:" << std::endl
+                           << "-c <int> set camera device id" << std::endl
+                           << "-h help (but you probably figured that out)" << std::endl
+                           << "-v turns off the video" << std::endl
+                           << std::endl
+                           ;std::exit(0);
       default : std::cout << "error from flags" << std::endl;   break;
     }
   }

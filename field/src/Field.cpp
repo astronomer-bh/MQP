@@ -18,13 +18,11 @@ Field::Field(int argc, char* argv[])
 }
 
 //initialize mqpif
-static MQPIf mqpif;  //DELME
+static MQPIf mqpif;
 
 // Opens the socket to send info to the Python code
-void Field::startSocket(){ //DELME
+void Field::startSocket(){
   std::cout << "starting socket" << std::endl;
-
-  extern char *optarg;  // this is the argument pointer thingie
   char host[256];
   int port = 9999;
   std::strcpy(host, "localhost");  //strcpy == string copy -BH
@@ -51,7 +49,7 @@ void Field::parseOptions(int argc, char* argv[]) {
 // checks cam for apriltag locations
 // updates robots with id corresponding to current apriltag IDs
 // creates robots if robot list does not have robot with ID needed
-void Field::updateRobots(){ //DELME
+void Field::updateRobots(){
   for (unsigned int i = 0; i < m_cam.getTags().size(); i++){
     AprilTags::TagDetection curTag = m_cam.getTags()[i];
     int tagID = curTag.id;
@@ -101,7 +99,7 @@ void Field::updateRobots(){ //DELME
 
 // updates camera and apriltag locations
 // then updates robot positions based on the new info
-void Field::loop(){  //DELME
+void Field::loop(){
   m_cam.loop();
   updateRobots();
 }
