@@ -84,7 +84,7 @@ void Cam::setupVideo() {
   m_cap.set(CV_CAP_PROP_FRAME_WIDTH, m_width);
   m_cap.set(CV_CAP_PROP_FRAME_HEIGHT, m_height);
   cout << "Camera successfully opened (ignore error messages above...)" << endl;
-  cout << "Actual resolution: "
+  cout << "Specified resolution: "
   << m_cap.get(CV_CAP_PROP_FRAME_WIDTH) << "x"
   << m_cap.get(CV_CAP_PROP_FRAME_HEIGHT) << endl;
 
