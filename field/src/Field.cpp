@@ -29,7 +29,7 @@ void Field::startSocket(MQPIf mqpif){
     mqpif.connect(host, port);
   }
   catch (const char *n_err) {
-    std::cout << *n_err << std::endl;  // This might not work (supposed to print the error message taken from mqpif.cpp) -BH
+    std::cout << n_err << std::endl;
   }
   catch (...) {
     std::cout << "internal error" << std::endl;
