@@ -2,6 +2,7 @@ import socket
 import socketserver
 import threading
 
+tagdict = {}
 class MyTCPHandler(socketserver.BaseRequestHandler):
 	"""
 	The request handler class for our server.
@@ -49,7 +50,10 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 	def dictIt(self):
 		tagid = self.TagData.pop(0)
 		self.tag[tagid] = self.TagData
-		print(self.tag)
+		tagdict = self.tag
+		#print(self.tag)
+		print(tagdict)
+
 
 class AprilTag:
 	def run(self):
