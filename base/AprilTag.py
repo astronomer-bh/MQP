@@ -16,16 +16,17 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 		while True:
 			length = 0
 			while True:
-				c = self.request.recv(1).strip()
-
+				ca = self.request.recv(1).strip()
+				c = ca.decode()
 				if ((c >= '0') and (c <= '9')):
 					length = (length * 10) + int(c)
 				else:
 					break
 
-			print("length = ", length)  # = 56 for camera, 24 for lidar
+			print("length = ", length) 
 			if length > 0:
-				self.interpretMsg(self, length)
+				self.length = length
+				self.interpretMsg()
 			else:
 				break
 			# print "c = ", c
@@ -36,16 +37,19 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 		print("done")
 		quit()
 
-	def interpretMsg(self, size):
+	def interpretMsg(self):
 		while True:
-			self.TagData = self.request.recv(size)
-			print(self.TagData.split(','))
+			self.TagData = self.request.recv(self.length)
+			self.TagData = self.TagData.decode()
+			self.TagData = self.TagData.split(',')
+			#print(self.TagData)
 			self.dictIt()
 			break
 
 	def dictIt(self):
-		tagid = self.TagData[0]
+		tagid = self.TagData.pop(0)
 		self.tag[tagid] = self.TagData
+		print(self.tag)
 
 class AprilTag:
 	def run(self):
@@ -64,5 +68,4 @@ if __name__ == "__main__":
 	print("joining thread")
 	thread.join()
 	print("threaded")
-
 
