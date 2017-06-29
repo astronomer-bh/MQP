@@ -203,7 +203,7 @@ class Robot:
 		# u from April Tags
 
 		deltaang = self.ATxyt[2] - self.ATxytOLD[2]
-		deltadist = math.sqrt((self.ATxyt[0] - self.ATxytOLD[0]) **2 + (self.ATxyt[1] - self.ATxytOLD[1] **2))
+		deltadist = math.sqrt((self.ATxyt[0] - self.ATxytOLD[0]) **2 + (self.ATxyt[1] - self.ATxytOLD[1]) **2)
 
 		u = [deltadist, deltaang]
 		# if in kalman filter mode, then use imu
@@ -382,8 +382,8 @@ class Robot:
 	# return False
 
 	def imove(self):	# takes gas index and paths accordingly, done this way due to wierd issues with v/theta conversion
-
-		self.robot.drive(self.velr)
+		self.velr = self.desired[0]
+		self.robot.drive_straight(self.velr)
 
 		# sepd = 235
 		# if self.gasindex == 0:

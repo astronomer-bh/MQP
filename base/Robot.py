@@ -47,12 +47,12 @@ class Robot:
 
 		self.curgas = []
 		self.gasses = []
-		self.curposAT = []
-		self.curangAT = []
+		self.curposAT = [0,0,0]
+		self.curangAT = [0,0,0]
 
 		self.conn = conn
 
-		self.map = Map.Map(id)
+		#self.map = Map.Map(id)
 		filetime = time.time()
 		self.filename = "Kalman Filter - %s.csv" %filetime
 		self.file = open(self.filename, "w")
@@ -67,7 +67,9 @@ class Robot:
 			[self.curpos, self.curgas] = encode.recievePacket(sock=self.conn)
 
 			# print x,y,theta,velocity
-			print(self.curpos)
+			print("robot thinks position",self.curpos)
+			self.curpos = [self.curposAT[0], self.curposAT[1], self.curangAT[1]]
+			print("robot actual position", self.curpos)
 			print(self.curgas)
 			self.addGas()
 
@@ -75,7 +77,7 @@ class Robot:
 			self.desired[2] = self.index
 			self.desired[3] = self.curposAT[0]
 			self.desired[4] = self.curposAT[1]
-			self.desired[5] = self.curangAT[1]
+			self.desired[5] = self.curangAT[0]
 
 			encode.sendPacket(sock=self.conn, message=self.desired)
 			print("desired v sent", self.desired)
@@ -96,27 +98,27 @@ class Robot:
 			y = (self.curpos[1] + Robot.ARM_D * math.sin(self.curpos[2] + ((math.pi / 2) * i)))
 			gas = Gas.Gas(x, y, concentration)
 			self.gasses.append(gas)
-			self.map.addGas(gas)
+			#self.map.addGas(gas)
 			i = i + 1
 
 	# determine highest of the gas concentrations
 	# and change desired to that direction
 	def findV(self):	# todo change back for proper pathing
 		self.index = self.curgas.index(max(self.curgas))
-		# self.desired = [Robot.SPEED * math.cos(((math.pi / 2) * self.index) + self.curpos[2]),
-		# 				Robot.SPEED * math.sin(((math.pi / 2) * self.index) + self.curpos[2])]
-
-		self.curtime = time.time()
-
-		if (self.curtime < self.start +7):  #180degrees is 9.714 for 38, or 12.907 for what 38 did yesterday
-			self.desired[0] = Robot.SPEED * 1.05 #cw = -1
-			self.desired[1] = Robot.SPEED * 1  #ccw = -1
-		elif (self.curtime < self.start +14):  #180degrees is 9.714 for 38, or 12.907 for what 38 did yesterday
-			self.desired[0] = Robot.SPEED * -1.05 #cw = -1
-			self.desired[1] = Robot.SPEED * -1  #ccw = -1
-		else:
-			self.desired[0] = 0
-			self.desired[1] = 0
+		self.desired = [Robot.SPEED * math.cos(((math.pi / 2) * self.index) + self.curpos[2]),
+						Robot.SPEED * math.sin(((math.pi / 2) * self.index) + self.curpos[2])]
+		#
+		# self.curtime = time.time()
+		#
+		# if (self.curtime < self.start +0):  #180degrees is 9.714 for 38, or 12.907 for what 38 did yesterday
+		# 	self.desired[0] = Robot.SPEED * 1.05 #cw = -1
+		# 	self.desired[1] = Robot.SPEED * 1  #ccw = -1
+		# elif (self.curtime < self.start +0):  #180degrees is 9.714 for 38, or 12.907 for what 38 did yesterday
+		# 	self.desired[0] = Robot.SPEED * -1.05 #cw = -1
+		# 	self.desired[1] = Robot.SPEED * -1  #ccw = -1
+		# else:
+		# 	self.desired[0] = 0
+		# 	self.desired[1] = 0
 
 		print("start time", self.start)
 		print("current time", self.curtime)
@@ -125,8 +127,9 @@ class Robot:
 
 	# update robot drawing
 	def draw(self):
-		self.map.updateRobot(self)
-		self.map.updateGas()
+		return
+		#self.map.updateRobot(self)
+		#self.map.updateGas()
 
 	def fileWrite(self):
 
@@ -134,13 +137,15 @@ class Robot:
 		self.file.write(f)
 
 	def aprilTag(self):
-		tagpackt = AprilTag.tagdict[self.id]	#apriltag file/thread saves data from each tag ID to a dictionary in the id position
+		tagpackt = AprilTag.tagdic	#apriltag file/thread saves data from each tag ID to a dictionary in the id position
+		tagpackt = tagpackt[self.id]
 		self.curposAT = [tagpackt[i] for i in (0,1,2)]
 		self.curangAT = [tagpackt[i] for i in (3,4,5)]
 
 	# run comm once at first to get initial readings
 	# then have it last so the exit call doesn't mess up the other funcs
 	def run(self):
+		time.sleep(10)
 		self.comm()
 		self.start = time.time()
 		self.curtime = self.start
@@ -152,7 +157,7 @@ class Robot:
 			self.comm()
 			self.fileWrite()
 	def terminate(self):
-		Map.savefile("GasMap.gif", self.map)  # added to save map as file, need to confirm this works as planned
+		#Map.savefile("GasMap.gif", self.map)  # added to save map as file, need to confirm this works as planned
 		self.keepRunning = False
 
 	###################
