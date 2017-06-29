@@ -74,6 +74,8 @@ class Robot:
 		# position initalization
 		self.curpos = [0, 0, 0]  # x,y,theta (cm,cm,rad)
 		self.desired = [0, 0]  # x_dot, y_dot
+		self.ATxyt = [0,0,0]
+		self.ATxytOLD = [0,0,0]
 
 		# desired velocity and theta
 		self.veld = 0
@@ -198,6 +200,11 @@ class Robot:
 		#print("time:", self.deltat)
 		#print("velocity u:", deltadist, deltaang)
 
+		# u from April Tags
+
+		deltaang = self.ATxyt[2] - self.ATxytOLD[2]
+		deltadist = math.sqrt((self.ATxyt[0] - self.ATxytOLD[0]) **2 + (self.ATxyt[1] - self.ATxytOLD[1] **2))
+
 		u = [deltadist, deltaang]
 		# if in kalman filter mode, then use imu
 		# otherwise trash it cause imu is definitely not great
@@ -210,6 +217,7 @@ class Robot:
 			z = sympy.Matrix([[accl_x - self.accl_x_offset],
 							  [accl_y - self.accl_y_offset],
 							  [gyro_z - self.gyro_z_offset]])
+
 			# estX = self.filter.KalmanFilter(z, deltadist, deltaang, deltat)
 			estX = self.filter.KalmanFilter(z, u, self.deltat)
 
@@ -303,6 +311,10 @@ class Robot:
 			self.desired[0] = rcv[0]
 			self.desired[1] = rcv[1]
 			self.gasindex = rcv[2]
+			self.ATxytOLD = self.ATxyt
+			self.ATxyt[0] = rcv[3]
+			self.ATxyt[1] = rcv[4]
+			self.ATxyt[2] = rcv[5]
 		return
 
 	def terminateComms(self):
@@ -370,28 +382,32 @@ class Robot:
 	# return False
 
 	def imove(self):	# takes gas index and paths accordingly, done this way due to wierd issues with v/theta conversion
-		sepd = 235
-		if self.gasindex == 0:
-			self.velr = Robot.DRIVE_SPEED
-			self.vell = Robot.DRIVE_SPEED
-		elif self.gasindex == 1:
-			self.velr = Robot.TURN_SPEED + sepd * math.pi/(2*self.deltat)  # may not need deltat
-			self.vell = Robot.TURN_SPEED - sepd * math.pi/(2*self.deltat)
-		elif self.gasindex == 2:
-			self.velr = Robot.TURN_SPEED
-			self.vell = -Robot.TURN_SPEED
-		elif self.gasindex == 3:
-			self.velr = Robot.TURN_SPEED - sepd * math.pi/(2*self.deltat)
-			self.vell = Robot.TURN_SPEED + sepd * math.pi /(2*self.deltat)  # may not need deltat
-		print("wheel speed:", self.velr, self.vell)
-		if self.velr > self.vell and self.velr > self.vmax:  # todo move this to base Robot
-			self.vell /= self.velr / self.vmax
-			self.velr /= self.velr / self.vmax
-		elif self.vell > self.vmax:
-			self.velr /= self.vell / self.vmax
-			self.vell /= self.vell / self.vmax
-		print("wheel speed corrected:", self.velr, self.vell)
-		self.robot.drive_direct(self.velr, self.vell)
+
+		self.robot.drive(self.velr)
+
+		# sepd = 235
+		# if self.gasindex == 0:
+		# 	self.velr = Robot.DRIVE_SPEED
+		# 	self.vell = Robot.DRIVE_SPEED
+		# elif self.gasindex == 1:
+		# 	self.velr = Robot.TURN_SPEED + sepd * math.pi/(2*self.deltat)  # may not need deltat
+		# 	self.vell = Robot.TURN_SPEED - sepd * math.pi/(2*self.deltat)
+		# elif self.gasindex == 2:
+		# 	self.velr = Robot.TURN_SPEED
+		# 	self.vell = -Robot.TURN_SPEED
+		# elif self.gasindex == 3:
+		# 	self.velr = Robot.TURN_SPEED - sepd * math.pi/(2*self.deltat)
+		# 	self.vell = Robot.TURN_SPEED + sepd * math.pi /(2*self.deltat)  # may not need deltat
+		# print("wheel speed:", self.velr, self.vell)
+		# if self.velr > self.vell and self.velr > self.vmax:  # todo move this to base Robot
+		# 	self.vell /= self.velr / self.vmax
+		# 	self.velr /= self.velr / self.vmax
+		# elif self.vell > self.vmax:
+		# 	self.velr /= self.vell / self.vmax
+		# 	self.vell /= self.vell / self.vmax
+		# print("wheel speed corrected:", self.velr, self.vell)
+		# self.robot.drive_direct(self.velr, self.vell)
+		#
 
 	# drive desired velocity
 	def drive(self):

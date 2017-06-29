@@ -8,10 +8,10 @@ class RobotNavigationEKF:
 	def __init__(self, stdTheta, stdD, stdAD, stdAG):
 		# todo standard deviations of ??, probably measuremens or certainty in model
 		#setting matrices to identity
-		self.stdTheta = 1
-		self.stdD = 1
-		self.stdAD = 1
-		self.stdAG = 1
+		#self.stdTheta = 1
+		#self.stdD = 1
+		#self.stdAD = 1
+		#self.stdAG = 1
 
 		self.P = sympy.eye(3)
 		# todo what is M, and why is theta first?

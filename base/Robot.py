@@ -20,6 +20,7 @@ import sys
 import pickle
 import threading
 import math
+import AprilTag
 import time
 
 import Gas
@@ -42,7 +43,7 @@ class Robot:
 
 		# position initialization
 		self.curpos = [0, 0, 0]
-		self.desired = [0, 0, 0]
+		self.desired = [0, 0, 0, 0, 0, 0]
 
 		self.curgas = []
 		self.gasses = []
@@ -72,6 +73,10 @@ class Robot:
 
 			# send desired velocities
 			self.desired[2] = self.index
+			self.desired[3] = self.curposAT[0]
+			self.desired[4] = self.curposAT[1]
+			self.desired[5] = self.curangAT[1]
+
 			encode.sendPacket(sock=self.conn, message=self.desired)
 			print("desired v sent", self.desired)
 		else:
@@ -129,9 +134,9 @@ class Robot:
 		self.file.write(f)
 
 	def aprilTag(self):
-		tagpackt = apriltag.tag[self.id]	#apriltag file/thread saves data from each tag ID to a dictionary in the id position
-		self.curposAT = [tagpackt[i] for i in (1,2,3)]
-		self.curangAT = [tagpackt[i] for i in (4,5,6)]
+		tagpackt = AprilTag.tagdict[self.id]	#apriltag file/thread saves data from each tag ID to a dictionary in the id position
+		self.curposAT = [tagpackt[i] for i in (0,1,2)]
+		self.curangAT = [tagpackt[i] for i in (3,4,5)]
 
 	# run comm once at first to get initial readings
 	# then have it last so the exit call doesn't mess up the other funcs
@@ -143,7 +148,7 @@ class Robot:
 		while self.keepRunning:
 			self.findV()
 			self.draw()
-			self.aprilTag # new data to be analyzed with comms, can send back almost immeditely as well
+			self.aprilTag() # new data to be analyzed with comms, can send back almost immeditely as well
 			self.comm()
 			self.fileWrite()
 	def terminate(self):
