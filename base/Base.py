@@ -31,8 +31,9 @@ from libs.graphics import *
 from libs.custom_libs import encoding_TCP as encode
 
 class Base:
-	def __init__(self, ip):
+	def __init__(self,numRob, ip):
 		self.keepRunning = True
+		self.numRob = numRob
 
 		# setup TCP server and listeing
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -65,7 +66,7 @@ class Base:
 		# all yur robots are belong to us
 		# make a thread for every robot communication
 		c = 0
-		while c < 0:	# number of robots?
+		while c < self.numRob:	# number of robots?
 			conn, client_address = self.sock.accept()
 			print("Connection from", client_address)
 			ID = encode.recievePacket(sock=conn)
@@ -92,9 +93,10 @@ class Base:
 # Create Base Station and Run#
 #############################
 parser = argparse.ArgumentParser()
+parser.add_argument("--NR", dest='numRob', type=int, help="Number of Robots to try to connect to", default=1)
 parser.add_argument("--IP", dest='ip', type=str, help="IP address of server", default="192.168.0.100") #
 args = parser.parse_args()
-base = Base(args.ip)
+base = Base(args.numRob, args.ip)
 try:
 	base.run()
 except KeyboardInterrupt:
