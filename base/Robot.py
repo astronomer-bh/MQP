@@ -56,7 +56,7 @@ class Robot:
 		filetime = time.time()
 		self.filename = "Kalman Filter - %s.csv" %filetime
 		self.file = open(self.filename, "w")
-		self.file.write("Kalman Filter: x -m,y -m,theta -rad,time -s \n")
+		self.file.write("Kalman Filter: x -m,y -m,theta -rad,time -s , apriltag\n")
 		print(self.filename)
 		print("file should be made")
 
@@ -64,16 +64,17 @@ class Robot:
 
 		if self.keepRunning:
 			# recieve posn
-			[self.curpos, self.curgas] = encode.recievePacket(sock=self.conn)
+			[self.curposKal, self.curgas] = encode.recievePacket(sock=self.conn)
 
 			# print x,y,theta,velocity
-			print("robot thinks position",self.curpos)
+			print("robot thinks position",self.curposKal)
 			self.curpos = [self.curposAT[0], self.curposAT[1], self.curangAT[1]]
 			print("robot actual position", self.curpos)
 			print(self.curgas)
 			self.addGas()
 
 			# send desired velocities
+			print(self.desired,self.index)
 			self.desired[2] = self.index
 			self.desired[3] = self.curposAT[0]
 			self.desired[4] = self.curposAT[1]
@@ -105,8 +106,8 @@ class Robot:
 	# and change desired to that direction
 	def findV(self):	# todo change back for proper pathing
 		self.index = self.curgas.index(max(self.curgas))
-		self.desired = [Robot.SPEED * math.cos(((math.pi / 2) * self.index) + self.curpos[2]),
-						Robot.SPEED * math.sin(((math.pi / 2) * self.index) + self.curpos[2])]
+		self.desired[0] = Robot.SPEED * math.cos(((math.pi / 2) * self.index) + self.curpos[2])
+		self.desired[1] = Robot.SPEED * math.sin(((math.pi / 2) * self.index) + self.curpos[2])
 		#
 		# self.curtime = time.time()
 		#
@@ -120,11 +121,6 @@ class Robot:
 		# 	self.desired[0] = 0
 		# 	self.desired[1] = 0
 
-		print("start time", self.start)
-		print("current time", self.curtime)
-		print(self.curtime < self.start + 5)
-		print(self.curtime < self.start + 10)
-
 	# update robot drawing
 	def draw(self):
 		return
@@ -132,8 +128,8 @@ class Robot:
 		#self.map.updateGas()
 
 	def fileWrite(self):
-
-		f = "%s \n" %[self.curpos,self.curtime]
+		self.curtime = time.time()
+		f = "%s \n" %[self.curposKal,self.curtime, self.curpos, self.curgas]
 		self.file.write(f)
 
 	def aprilTag(self):

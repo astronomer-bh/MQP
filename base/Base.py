@@ -55,13 +55,6 @@ class Base:
 
 	def run(self):
 		# start april tag server and put in robot thread
-		print(self.robotThreads)
-		aprilTag = AprilTag.AprilTag()
-		aprilThread = threading.Thread(target=aprilTag.run)
-		self.robotThreads.append(aprilThread)
-		self.robots.append(aprilTag)
-		print(self.robotThreads)
-		print(len(self.robotThreads))
 		# catch all robots
 		# all yur robots are belong to us
 		# make a thread for every robot communication
@@ -76,9 +69,15 @@ class Base:
 			self.robotThreads.append(thread)
 			self.robots.append(robot)
 			c += 1
+		print(self.robotThreads)
+		aprilTag = AprilTag.AprilTag()
+		aprilThread = threading.Thread(target=aprilTag.run)
+		self.robotThreads.append(aprilThread)
+		self.robots.append(aprilTag)
+		print(self.robotThreads)
+		print(len(self.robotThreads))
 		for i in range(0,len(self.robotThreads)):	# start threads
 			self.robotThreads[i].start()
-		print("catch")
 		for i in range(0,len(self.robotThreads)):	# join thread
 			self.robotThreads[i].join()
 		# make sure to kill the threads!
