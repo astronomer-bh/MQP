@@ -362,12 +362,12 @@ class Robot:
 			[self.velr, self.vell] = self.uTransform.inv() * sympy.Matrix([self.veld, diff])
 			print(self.velr,self.vell)
 
-			if self.velr > self.vell and abs(self.velr) > self.vmax:
-				self.vell /= self.velr / self.vmax
-				self.velr /= self.velr / self.vmax
+			if abs(self.velr) > abs(self.vell) and abs(self.velr) > self.vmax:
+				self.vell /= abs(self.velr) / self.vmax
+				self.velr /= abs(self.velr) / self.vmax
 			elif abs(self.vell) > self.vmax:
-				self.velr /= self.vell / self.vmax
-				self.vell /= self.vell / self.vmax
+				self.velr /= abs(self.vell) / self.vmax
+				self.vell /= abs(self.vell) / self.vmax
 			print("Vr and Vl:", self.velr, self.vell)
 
 			self.robot.drive_direct(self.velr, self.vell)
