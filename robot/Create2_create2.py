@@ -334,9 +334,9 @@ class Robot:
 		elif (self.desired[0] == 0 and self.desired[1] < 0):
 			self.thetad = math.pi / (-2)
 		elif (self.desired[0] > 0):
-			self.thetad = math.atan(self.desired[1] / self.desired[0])
+			self.thetad = math.atan2(self.desired[1] / self.desired[0])
 		elif (self.desired[0] < 0):
-			self.thetad = math.pi + math.atan(self.desired[1] / self.desired[0])
+			self.thetad = math.pi + math.atan2(self.desired[1] / self.desired[0])
 		return
 
 	###################
