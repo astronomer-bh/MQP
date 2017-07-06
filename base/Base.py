@@ -31,9 +31,10 @@ from libs.graphics import *
 from libs.custom_libs import encoding_TCP as encode
 
 class Base:
-	def __init__(self,numRob, ip):
+	def __init__(self,numRob, ip, inputs):
 		self.keepRunning = True
 		self.numRob = numRob
+		self.inputs = inputs
 
 		# setup TCP server and listeing
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -70,12 +71,14 @@ class Base:
 			self.robots.append(robot)
 			c += 1
 		print(self.robotThreads)
-		aprilTag = AprilTag.AprilTag()
-		aprilThread = threading.Thread(target=aprilTag.run)
-		self.robotThreads.append(aprilThread)
-		self.robots.append(aprilTag)
+		if self.inputs == 0:
+			aprilTag = AprilTag.AprilTag()
+			aprilThread = threading.Thread(target=aprilTag.run)
+			self.robotThreads.append(aprilThread)
+			self.robots.append(aprilTag)
 		print(self.robotThreads)
 		print(len(self.robotThreads))
+
 		for i in range(0,len(self.robotThreads)):	# start threads
 			self.robotThreads[i].start()
 		for i in range(0,len(self.robotThreads)):	# join thread
@@ -94,8 +97,9 @@ class Base:
 parser = argparse.ArgumentParser()
 parser.add_argument("--NR", dest='numRob', type=int, help="Number of Robots to try to connect to", default=1)
 parser.add_argument("--IP", dest='ip', type=str, help="IP address of server", default="192.168.0.100") #
+parser.add_argument("--IN", dest='inputs', type=str, help="apriltag 0 vs encoder 1 dependent robot", default =0)
 args = parser.parse_args()
-base = Base(args.numRob, args.ip)
+base = Base(args.numRob, args.ip, args.inputs)
 try:
 	base.run()
 except KeyboardInterrupt:

@@ -47,7 +47,7 @@ class Robot:
 	CALI_TIME = 5
 	ANGMARG = .05
 
-	def __init__(self, id, ip, mode, usbport):
+	def __init__(self, id, ip, mode, usbport, inputs, ctrl):
 		if usbport is '0':
 			# robot initialization
 			self.ROBOT_SERIAL_PORT = "/dev/ttyUSB0"
@@ -70,6 +70,8 @@ class Robot:
 		self.TNSY_BAUD_RATE = 9600
 
 		self.id = id
+		self.input = inputs
+		self.ctrl = ctrl
 
 		# position initalization
 		self.curpos = [0, 0, 0]  # x,y,theta (cm,cm,rad)
@@ -173,19 +175,25 @@ class Robot:
 		self.deltat = self.endt - self.startt
 		self.startt = time.time()
 
-		# calculate encoder bits (mm & rad)
-		print("getting encoder stuffs")
-		# get distance and angle readings
-		self.robot.get_packet(19)	#distance
-		self.robot.get_packet(20)	#theta
-		#self.robot.get_packet(41)	#right velocity
-		#self.robot.get_packet(42)	#left velocity
+		if self.input == 0:
+			deltaang = self.ATxyt[2] - self.ATxytOLD[2]
+			deltadist = math.sqrt((self.ATxyt[0] - self.ATxytOLD[0]) ** 2 + (self.ATxyt[1] - self.ATxytOLD[1]) ** 2)
 
-		print("encoder info:", self.robot.sensor_state['distance'], self.robot.sensor_state['angle'])
+		elif self.input == 1:
+			# calculate encoder bits (mm & rad)
+			print("getting encoder stuffs")
 
-		deltadist = self.robot.sensor_state['distance'] / 1000  # meters
-		deltaang = self.robot.sensor_state['angle'] * math.pi / 180  # radians
-		print("encoder u:", deltadist, deltaang)
+			# get distance and angle readings
+			self.robot.get_packet(19)	#distance
+			self.robot.get_packet(20)	#theta
+			#self.robot.get_packet(41)	#right velocity
+			#self.robot.get_packet(42)	#left velocity
+
+			print("encoder info:", self.robot.sensor_state['distance'], self.robot.sensor_state['angle'])
+
+			deltadist = self.robot.sensor_state['distance'] / 1000  # meters
+			deltaang = self.robot.sensor_state['angle'] * math.pi / 180  # radians
+			print("encoder u:", deltadist, deltaang)
 
 		#requestedVRraw = self.robot.sensor_state['requested right velocity']
 		#requestedVLraw = self.robot.sensor_state['requested left velocity']
@@ -201,9 +209,6 @@ class Robot:
 		#print("velocity u:", deltadist, deltaang)
 
 		# u from April Tags
-
-		deltaang = self.ATxyt[2] - self.ATxytOLD[2]
-		deltadist = math.sqrt((self.ATxyt[0] - self.ATxytOLD[0]) **2 + (self.ATxyt[1] - self.ATxytOLD[1]) **2)
 
 		u = [deltadist, deltaang]
 		# if in kalman filter mode, then use imu
@@ -346,30 +351,42 @@ class Robot:
 	# movement control
 	# decide turn or straight
 	def move(self):
-		diff = math.tan((self.thetad - self.curpos[2]) / 2)
-		sepd = 235
-		self.uTransform = sympy.Matrix([  # todo send this to Base
-			[1 / 2, 1 / 2],
-			[1 / sepd, -1 / sepd]
-		])
-		print("velocities before and after transform",sympy.Matrix([self.veld, diff]))
-		[self.velr, self.vell] = self.uTransform.inv() * sympy.Matrix([self.veld, diff])
-		print(self.velr,self.vell)
+		if self.ctrl == 0:
+			diff = math.tan((self.thetad - self.curpos[2]) / 2)
+			sepd = 235
+			self.uTransform = sympy.Matrix([  # todo send this to Base
+				[1 / 2, 1 / 2],
+				[1 / sepd, -1 / sepd]
+			])
+			print("velocities before and after transform",sympy.Matrix([self.veld, diff]))
+			[self.velr, self.vell] = self.uTransform.inv() * sympy.Matrix([self.veld, diff])
+			print(self.velr,self.vell)
 
-		if self.velr > self.vell and self.velr > self.vmax:  # todo move this to base Robot
-			self.vell /= self.velr / self.vmax
-			self.velr /= self.velr / self.vmax
-		elif self.vell > self.vmax:
-			self.velr /= self.vell / self.vmax
-			self.vell /= self.vell / self.vmax
-		print("Vr and Vl:", self.velr, self.vell)
+			if self.velr > self.vell and self.velr > self.vmax:  # todo move this to base Robot
+				self.vell /= self.velr / self.vmax
+				self.velr /= self.velr / self.vmax
+			elif self.vell > self.vmax:
+				self.velr /= self.vell / self.vmax
+				self.vell /= self.vell / self.vmax
+			print("Vr and Vl:", self.velr, self.vell)
 
-		print("using direct control, ignoring calctatued values")
-		self.velr = self.desired[0]
-		self.vell = self.desired[1]
+			print("using direct control, ignoring calctatued values")
+			self.velr = self.desired[0]
+			self.vell = self.desired[1]
 
-		self.robot.drive_direct(self.velr, self.vell)
+			self.robot.drive_direct(self.velr, self.vell)
 
+		elif self.ctrl ==1:
+			self.velr = self.desired[0]
+			self.vell = self.desired[1]
+			self.robot.drive_straight(self.velr)
+
+		elif self.ctrl ==2:
+			self.velr = self.desired[0]
+			self.vell = self.desired[1]
+			self.robot.drive_direct(self.velr)
+		else:
+			print("invalid control requested")
 	# diff = math.tan((self.thetad - self.curpos[2]) / 2)
 	# if (diff < -Robot.ANGMARG):
 
@@ -383,6 +400,7 @@ class Robot:
 
 	def imove(self):	# takes gas index and paths accordingly, done this way due to wierd issues with v/theta conversion
 		self.velr = self.desired[0]
+		self.vell = self.desired[1]
 		self.robot.drive_straight(self.velr)
 
 		# sepd = 235
@@ -475,6 +493,8 @@ parser.add_argument("--id", dest='id', type=int, help="assign ID to robot")
 parser.add_argument("--ip", dest='ip', type=str, help="IP address of server", default="192.168.0.100")
 parser.add_argument("--mode", dest='mode', type=str, help="LKF, EKF, ENC", default="EKF")
 parser.add_argument("--usbport", dest='usbport', type=str, help="switches usb port if needed: 0,1", default="0")
+parser.add_argument("--IN", dest='inputs', type=int, help="apriltag 0 or encoder 1 for ekf input", default = 0)
+parser.add_argument("--ctrl", dest='ctrl', type=int, help="control choice for robot: 0 for pathing, 1 for direct straight, 2 for direct control of each wheel", default=0)
 args = parser.parse_args()
-robot = Robot(args.id, args.ip, args.mode, args.usbport)
+robot = Robot(args.id, args.ip, args.mode, args.usbport, args.inputs, args.ctrl)
 robot.main()
