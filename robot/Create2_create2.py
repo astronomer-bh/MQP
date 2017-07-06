@@ -44,7 +44,7 @@ class Robot:
 	DRIVE_SPEED = 20
 	TURN_SPEED = 15
 	STOP = 0
-	CALI_TIME = 5
+	CALI_TIME = 5	 # todo return to 60 following fixes
 	ANGMARG = .05
 
 	def __init__(self, id, ip, mode, usbport, inputs, ctrl):
@@ -98,7 +98,7 @@ class Robot:
 		self.ang = self.curpos[2]
 
 		# connect robot
-		# TODO: start in full mode. not working correctly as is
+		# TODO: start in full mode. not working correctly as is # does this need to be in full mode?
 		self.robot = _Create2(self.ROBOT_SERIAL_PORT, self.ROBOT_BAUD_RATE)
 		self.robot.start()
 		self.robot.safe()
@@ -243,14 +243,14 @@ class Robot:
 
 	# COZIR calibration
 	def calibrate(self):
-		print("not calibrating, for direct")
-		# self.turnCCW()
+		if self.ctrl == 0:
+			self.turnCCW()
 		start = time.time()
 		curtime = start
 		measurements = 0
 		gasses = [0, 0, 0, 0]
 		self.gas_offset = [0, 0, 0, 0]
-		while (curtime < start + Robot.CALI_TIME):  # todo return to 60 following fixes
+		while (curtime < start + Robot.CALI_TIME):
 			self.requestGas()
 			self.updateGas()
 			gasses = list(np.array(self.gas) + np.array(gasses))
@@ -308,7 +308,7 @@ class Robot:
 		# determine what to do with message
 		if rcv == "out":
 			encode.sendPacket(sock=self.sock, message="out")
-			self.quits()  # TODO: should this be self.quit, trying it
+			self.quits()  # TODO: does this work?
 		elif rcv is None:  # base station not cooperating, this catches when it closes and there is an empty socket connection, and (should) gracefullly kill the robot
 			print("exiting i guess :(")
 			self.quits()
@@ -362,17 +362,13 @@ class Robot:
 			[self.velr, self.vell] = self.uTransform.inv() * sympy.Matrix([self.veld, diff])
 			print(self.velr,self.vell)
 
-			if self.velr > self.vell and self.velr > self.vmax:  # todo move this to base Robot
+			if self.velr > self.vell and abs(self.velr) > self.vmax:
 				self.vell /= self.velr / self.vmax
 				self.velr /= self.velr / self.vmax
-			elif self.vell > self.vmax:
+			elif abs(self.vell) > self.vmax:
 				self.velr /= self.vell / self.vmax
 				self.vell /= self.vell / self.vmax
 			print("Vr and Vl:", self.velr, self.vell)
-
-			print("using direct control, ignoring calctatued values")
-			self.velr = self.desired[0]
-			self.vell = self.desired[1]
 
 			self.robot.drive_direct(self.velr, self.vell)
 
@@ -398,35 +394,6 @@ class Robot:
 	# 	return True
 	# return False
 
-	def imove(self):	# takes gas index and paths accordingly, done this way due to wierd issues with v/theta conversion
-		self.velr = self.desired[0]
-		self.vell = self.desired[1]
-		self.robot.drive_straight(self.velr)
-
-		# sepd = 235
-		# if self.gasindex == 0:
-		# 	self.velr = Robot.DRIVE_SPEED
-		# 	self.vell = Robot.DRIVE_SPEED
-		# elif self.gasindex == 1:
-		# 	self.velr = Robot.TURN_SPEED + sepd * math.pi/(2*self.deltat)  # may not need deltat
-		# 	self.vell = Robot.TURN_SPEED - sepd * math.pi/(2*self.deltat)
-		# elif self.gasindex == 2:
-		# 	self.velr = Robot.TURN_SPEED
-		# 	self.vell = -Robot.TURN_SPEED
-		# elif self.gasindex == 3:
-		# 	self.velr = Robot.TURN_SPEED - sepd * math.pi/(2*self.deltat)
-		# 	self.vell = Robot.TURN_SPEED + sepd * math.pi /(2*self.deltat)  # may not need deltat
-		# print("wheel speed:", self.velr, self.vell)
-		# if self.velr > self.vell and self.velr > self.vmax:  # todo move this to base Robot
-		# 	self.vell /= self.velr / self.vmax
-		# 	self.velr /= self.velr / self.vmax
-		# elif self.vell > self.vmax:
-		# 	self.velr /= self.vell / self.vmax
-		# 	self.vell /= self.vell / self.vmax
-		# print("wheel speed corrected:", self.velr, self.vell)
-		# self.robot.drive_direct(self.velr, self.vell)
-		#
-
 	# drive desired velocity
 	def drive(self):
 		self.robot.drive_direct(Robot.DRIVE_SPEED, Robot.DRIVE_SPEED)
@@ -446,7 +413,7 @@ class Robot:
 		self.robot.drive_direct(0,0)
 
 	# end robot
-	def quits(self):  # TODO: does naming this quit mess with things?
+	def quits(self):  # TODO: does this work?
 		self.keepRunning = False
 		self.robot.seek_dock()
 		return
